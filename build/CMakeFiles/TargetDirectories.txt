@@ -1,0 +1,3 @@
+/home/cristi/nrf24TestC/NRF24ImageSender/build/CMakeFiles/rebuild_cache.dir
+/home/cristi/nrf24TestC/NRF24ImageSender/build/CMakeFiles/nrf24l01.dir
+/home/cristi/nrf24TestC/NRF24ImageSender/build/CMakeFiles/edit_cache.dir
