@@ -2,7 +2,12 @@
 
 int main()
 {
-	NRF24();
+	char data[] = {"Buna Cristi!"};
+	char txAddress[] = {0xEE,0xDD,0xCC,0xBB,0xAA};
+	NRF24 nrf24 = NRF24();
+	nrf24.nrf24_TxMode(txAddress, 5);
+	nrf24.nrf24_TransmitData(data);
+
 }
 
 //write a single byte
@@ -26,13 +31,17 @@ void NRF24::nrf24_WriteReg (char reg, char data)
 	enablePin(CSN_PIN);
 }
 //write multiple datas
-void NRF24::nrf24_WriteRegMulti(char reg, char* data, int size)
+void NRF24::nrf24_WriteRegMulti(char reg, char* data,int size)
 {
-	char buf[2];
-	buf[0] = reg|1<<5;
+	//char buf[size];
+	std::unique_ptr<char[]>buf = std::make_unique<char[]>(size);
+	//std::strcpy(
+	buf.get()[0] = reg|1<<5;
+	strcpy(buf.get(), data);
+	//buf[1] = data;
 
         disablePin(CSN_PIN);
-        verify_ = spiXfer(SPI_init_, buf,nullptr, 1);
+        verify_ = spiXfer(SPI_init_, buf.get(),nullptr, size);
         if(verify_ < 0)
         {
                 std::cout << "SPI port transfer failed. Error code: " << verify_ << "\n";
@@ -41,17 +50,6 @@ void NRF24::nrf24_WriteRegMulti(char reg, char* data, int size)
         else
         {
                 std::cout << "Spi port transfer OK";
-        }
-
-        verify_ = spiXfer(SPI_init_, data, nullptr, size);
-        if(verify_ < 0)
-        {
-                std::cout << "SPI port transfer fail\n";
-                exit(init_);
-        }
-        else
-        {
-                std::cout << "Spi port transfer OK\n";
         }
         enablePin(CSN_PIN);
 }
@@ -189,14 +187,54 @@ void NRF24::disablePin(int pin)
 	gpioWrite(pin,0);
 }
 
-void NRF24::nrf24_TxMode(char address, char channel)
+void NRF24::nrf24_TxMode(char* address, char channel)
 {
 	disablePin(CE_PIN);
-	enablePin(CSN_PIN);
-	
-	nrf24_WriteReg(RF_CH, channel);
+	//enablePin(CSN_PIN);
 
+	//select the channel
+	nrf24_WriteReg(RF_CH, channel); 
+	
+	//write the tx address
+	nrf24_WriteRegMulti(TX_ADDR, address, 5);
+	
+	//power up the device 
+	char config = nrf24_ReadReg(CONFIG);
+	config = config | (1 << 1);
+	nrf24_WriteReg(CONFIG, config);
+	enablePin(CE_PIN);
+	//disablePin(CSN_PIN);
 }	
+
+void NRF24::nrf24_TransmitData(char* data)
+{
+	//char cmd
+	//disablePin(CSN_PIN);
+
+	nrfSendCommand(W_TX_PAYLOAD);
+	disablePin(CSN_PIN);
+	verify_ = spiXfer(SPI_init_, data, nullptr,						  32);
+	enablePin(CSN_PIN);
+
+	usleep(1);
+
+	char fifo = nrf24_ReadReg(FIFO_STATUS);
+	
+	if(fifo&(1<<4))
+	{
+		if(!(fifo&(1<<3)))
+		{
+			std::cout << "It transmited data\n";
+			nrfSendCommand(FLUSH_TX);
+		}
+		else
+		{
+			std::cout << "The device isn't connected\n";
+			//nrfSendCommand(FLUSH_TX);
+		}
+	}
+
+}
 
 
 

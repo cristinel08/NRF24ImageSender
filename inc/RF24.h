@@ -1,5 +1,8 @@
 #include<jetgpio.h>
 #include<iostream>
+#include<string.h>
+#include <unistd.h>
+#include<memory>
 #pragma once
 #ifndef INC_RF24_H_
 #define INC_RF24_H_
@@ -57,8 +60,9 @@ class NRF24{
 		NRF24();
 		void enablePin(int pin);
 		void disablePin(int pin);
-		void nrf24_TxMode(char address,
-				  char channel);
+		void nrf24_TxMode(char* address,
+				  char  channel);
+		void nrf24_TransmitData(char* data);
 	private:
 		//variable that checks the proper
 		//use for functions in the jetson
