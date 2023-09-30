@@ -31,12 +31,12 @@ set(EXECUTABLE
 set(INCLUDES
    {ljetgpio_INCLUDE_DIRS}
    {OpenCV_INCLUDE_DIRS}
-   ${ROOT_DIR}/inc
+   ${ROOT_DIR}/inc/
 )
 
 add_executable(${PROJECT_NAME} ${EXECUTABLE})
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC RF24_NO_INTERRUPT)
+#target_compile_definitions(${PROJECT_NAME} PUBLIC RF24_NO_INTERRUPT)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 

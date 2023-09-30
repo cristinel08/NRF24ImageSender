@@ -1,23 +1,6 @@
-/*
-  ***************************************************************************************************************
-  ***************************************************************************************************************
-  ***************************************************************************************************************
-
-  File:		  NRF24L01.h
-  Author:     ControllersTech.com
-  Updated:    30th APRIL 2021
-
-  ***************************************************************************************************************
-  Copyright (C) 2017 ControllersTech.com
-
-  This is a free software under the GNU license, you can redistribute it and/or modify it under the terms
-  of the GNU General Public License version 3 as published by the Free Software Foundation.
-  This software library is shared with public for educational purposes, without WARRANTY and Author is not liable for any damages caused directly
-  or indirectly by this software, read more about this on the GNU General Public License.
-
-  ***************************************************************************************************************
-*/
-
+#include<jetgpio.h>
+#include<iostream>
+#pragma once
 #ifndef INC_RF24_H_
 #define INC_RF24_H_
 
@@ -64,5 +47,39 @@
 #define REUSE_TX_PL   0xE3
 #define NOP           0xFF
 
+#define CE_PIN 18
+#define CSN_PIN 21
+
 
 #endif /* INC_RF24_H_ */
+class NRF24{
+	public:
+		NRF24();
+		void enablePin(int pin);
+		void disablePin(int pin);
+		void nrf24_TxMode(char address,
+				  char channel);
+	private:
+		//variable that checks the proper
+		//use for functions in the jetson
+		//lib
+		int init_;
+		int SPI_init_;
+		int verify_;
+
+		void nrf24_WriteRegMulti(char reg,char* data,int size);
+		void nrfSendCommand(char cmd);
+		void nrf24_WriteReg(char reg,
+				    char data);
+		char nrf24_ReadReg(char reg);
+		void nrf24_ReadMulti(char reg, 
+				     char* data,
+				     int size);
+		//void nrf24_WriteRegMulti(char reg,
+		//			 char* data					   ,int size);
+
+};
+
+
+
+
