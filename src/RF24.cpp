@@ -2,16 +2,34 @@
 
 int main()
 {
-	char data[] = {"Buna Cristi!"};
+	char dataTx[] = {"Buna Cristi!"};
 	char txAddress[] = {0xEE,0xDD,0xCC,0xBB,0xAA};
-	NRF24 nrf24 = NRF24();
-	nrf24.nrf24_TxMode(txAddress, 5);
-	nrf24.nrf24_TransmitData(data);
+	char rxAddress[] = {0xEE,0xDD,0xCC,0xBB,0xAA};
+	char data[32] = {};
 
+	NRF24 nrf24 = NRF24();
+	//nrf24.TxMode(txAddress, 5);
+	//nrf24.TransmitData(dataTx);
+
+	nrf24.RxMode(rxAddress, 10);
+	while(1)
+	{
+		if(nrf24.IsDataAvailable(1))
+		{
+			nrf24.ReceiveData(data);
+			std::cout << data << '\n';
+		}
+		else 
+		{
+			std::cout << 
+			"Data is not available\n";
+			break;
+		}
+	}
 }
 
 //write a single byte
-void NRF24::nrf24_WriteReg (char reg, char data)
+void NRF24::WriteReg (char reg, char data)
 {
 	char buf[2];
 	buf[0] = reg|1<<5;
@@ -31,7 +49,7 @@ void NRF24::nrf24_WriteReg (char reg, char data)
 	enablePin(CSN_PIN);
 }
 //write multiple datas
-void NRF24::nrf24_WriteRegMulti(char reg, char* data,int size)
+void NRF24::WriteRegMulti(char reg, char* data,int size)
 {
 	//char buf[size];
 	std::unique_ptr<char[]>buf = std::make_unique<char[]>(size);
@@ -54,7 +72,7 @@ void NRF24::nrf24_WriteRegMulti(char reg, char* data,int size)
         enablePin(CSN_PIN);
 }
 //read 1 byte
-char NRF24::nrf24_ReadReg (char reg)
+char NRF24::ReadReg (char reg)
 {
 	char data='0';
 	
@@ -74,7 +92,7 @@ char NRF24::nrf24_ReadReg (char reg)
 	enablePin(CSN_PIN);
 	return data;
 }
-void NRF24::nrf24_ReadMulti (char reg, char* data, int size)
+void NRF24::ReadMulti(char reg, char* data, int size)
 {	
 	//pentru a selecta dispozitivul
 	disablePin(CSN_PIN);
@@ -92,7 +110,7 @@ void NRF24::nrf24_ReadMulti (char reg, char* data, int size)
 	enablePin(CSN_PIN);
 }
 
-void NRF24::nrfSendCommand(char cmd)
+void NRF24::SendCommand(char cmd)
 {
 	disablePin(CSN_PIN);
 	verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
@@ -159,19 +177,19 @@ NRF24::NRF24()
 	disablePin(CE_PIN);
 	enablePin(CSN_PIN);
 
-	nrf24_WriteReg(CONFIG, 0);//,SPI_init,init); //config later
+	WriteReg(CONFIG, 0);//,SPI_init,init); //config later
 
-	nrf24_WriteReg(EN_AA, 0);//, SPI_init, init); // No Auto Ack
+	WriteReg(EN_AA, 0);//, SPI_init, init); // No Auto Ack
 
-	nrf24_WriteReg(EN_RXADDR, 0);//, SPI_init, init); //0 data pipes enabled
+	WriteReg(EN_RXADDR, 0);//, SPI_init, init); //0 data pipes enabled
 
-	nrf24_WriteReg(SETUP_AW, 0x03);//,SPI_init, init);	//5 bytes for the tx/rx address
+	WriteReg(SETUP_AW, 0x03);//,SPI_init, init);	//5 bytes for the tx/rx address
 
-	nrf24_WriteReg(SETUP_RETR, 0);//, SPI_init, init); //No Retransmision
+	WriteReg(SETUP_RETR, 0);//, SPI_init, init); //No Retransmision
 
-	nrf24_WriteReg(RF_CH, 0);//, SPI_init, init);     //Channel will be setup in  during TX or RX
+	WriteReg(RF_CH, 0);//, SPI_init, init);     //Channel will be setup in  during TX or RX
 
-	nrf24_WriteReg(RF_SETUP, 0x0E);//, SPI_init, init);	//Power 0dB, data rate = 2Mbps
+	WriteReg(RF_SETUP, 0x0E);//, SPI_init, init);	//Power 0dB, data rate = 2Mbps
 
 	enablePin(CE_PIN);
 	disablePin(CSN_PIN);
@@ -187,45 +205,45 @@ void NRF24::disablePin(int pin)
 	gpioWrite(pin,0);
 }
 
-void NRF24::nrf24_TxMode(char* address, char channel)
+void NRF24::TxMode(char* address, char channel)
 {
 	disablePin(CE_PIN);
 	//enablePin(CSN_PIN);
 
 	//select the channel
-	nrf24_WriteReg(RF_CH, channel); 
+	WriteReg(RF_CH, channel); 
 	
 	//write the tx address
-	nrf24_WriteRegMulti(TX_ADDR, address, 5);
+	WriteRegMulti(TX_ADDR, address, 5);
 	
 	//power up the device 
-	char config = nrf24_ReadReg(CONFIG);
+	char config = ReadReg(CONFIG);
 	config = config | (1 << 1);
-	nrf24_WriteReg(CONFIG, config);
+	WriteReg(CONFIG, config);
 	enablePin(CE_PIN);
 	//disablePin(CSN_PIN);
 }	
 
-void NRF24::nrf24_TransmitData(char* data)
+void NRF24::TransmitData(char* data)
 {
 	//char cmd
 	//disablePin(CSN_PIN);
 
-	nrfSendCommand(W_TX_PAYLOAD);
+	SendCommand(W_TX_PAYLOAD);
 	disablePin(CSN_PIN);
 	verify_ = spiXfer(SPI_init_, data, nullptr,						  32);
 	enablePin(CSN_PIN);
 
 	usleep(1);
 
-	char fifo = nrf24_ReadReg(FIFO_STATUS);
+	char fifo = ReadReg(FIFO_STATUS);
 	
 	if(fifo&(1<<4))
 	{
 		if(!(fifo&(1<<3)))
 		{
 			std::cout << "It transmited data\n";
-			nrfSendCommand(FLUSH_TX);
+			SendCommand(FLUSH_TX);
 		}
 		else
 		{
@@ -235,6 +253,63 @@ void NRF24::nrf24_TransmitData(char* data)
 	}
 
 }
+
+
+void NRF24::RxMode(char* address, char channel)
+{
+        disablePin(CE_PIN);
+        //enablePin(CSN_PIN);
+
+        //select the channel
+        WriteReg(RF_CH, channel);
+	
+	char en_rxaddr = ReadReg(EN_RXADDR);
+
+	//select data pipe 1
+	WriteReg(EN_RXADDR, en_rxaddr | (1<<1)); 
+
+        //write the tx address
+        WriteRegMulti(RX_ADDR_P1, address, 5);
+
+	//setting the payload to maximum 32 bits
+	WriteReg(RX_PW_P1, 32);
+
+        //power up the device in RX mode
+        char config = ReadReg(CONFIG);
+        config = config | (1 << 1) | (1 << 0);
+        WriteReg(CONFIG, config);
+        enablePin(CE_PIN);
+        //disablePin(CSN_PIN);
+
+}	
+
+uint8_t NRF24::IsDataAvailable(int pipeNr)
+{
+	char status = ReadReg(STATUS);
+
+	if ((status & (1 << 6)) && 
+	    (status & (pipeNr << 1)))
+	{
+		WriteReg(STATUS, (1 << 6));
+		return 1;
+	}
+	return 0;
+}
+
+void NRF24::ReceiveData(char* data)
+{
+
+        SendCommand(R_RX_PAYLOAD);
+        disablePin(CSN_PIN);
+        verify_ = spiXfer(SPI_init_, nullptr
+				   , data, 32);
+        enablePin(CSN_PIN);
+
+        usleep(1);
+
+	SendCommand(FLUSH_RX);
+}
+
 
 
 

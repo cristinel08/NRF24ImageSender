@@ -50,8 +50,8 @@
 #define REUSE_TX_PL   0xE3
 #define NOP           0xFF
 
-#define CE_PIN 18
-#define CSN_PIN 21
+#define CE_PIN 		18
+#define CSN_PIN 	16
 
 
 #endif /* INC_RF24_H_ */
@@ -60,9 +60,12 @@ class NRF24{
 		NRF24();
 		void enablePin(int pin);
 		void disablePin(int pin);
-		void nrf24_TxMode(char* address,
-				  char  channel);
-		void nrf24_TransmitData(char* data);
+		void TxMode(char* address,char  channel);
+		void TransmitData(char* data);
+		void RxMode(char* address,char data);
+		void ReceiveData(char* data);
+		uint8_t IsDataAvailable(int);
+
 	private:
 		//variable that checks the proper
 		//use for functions in the jetson
@@ -71,19 +74,9 @@ class NRF24{
 		int SPI_init_;
 		int verify_;
 
-		void nrf24_WriteRegMulti(char reg,char* data,int size);
-		void nrfSendCommand(char cmd);
-		void nrf24_WriteReg(char reg,
-				    char data);
-		char nrf24_ReadReg(char reg);
-		void nrf24_ReadMulti(char reg, 
-				     char* data,
-				     int size);
-		//void nrf24_WriteRegMulti(char reg,
-		//			 char* data					   ,int size);
-
+		void WriteRegMulti(char reg,char* data,int size);
+		void SendCommand(char cmd);
+		void WriteReg(char reg,char data);
+		char ReadReg(char reg);
+		void ReadMulti(char reg,char* data,int size);
 };
-
-
-
-
