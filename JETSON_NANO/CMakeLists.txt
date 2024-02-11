@@ -25,6 +25,7 @@ message(STATUS "OpenCV_LIBS=${OpenCV_LIBS}")
 set(EXECUTABLE
 	${ROOT_DIR}/src/RF24.cpp
 	${ROOT_DIR}/inc/RF24.h
+	${ROOT_DIR}/src/main.cpp
 	#${ljetgpio_INCLUDE_DIRS}/jetgpio.h
 )
 

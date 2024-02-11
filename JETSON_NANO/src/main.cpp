@@ -5,17 +5,116 @@
 #include<string>
 #include<ctime>
 
-//using namespace GPIO; // optional
+// char ReadReg (char reg, int SPI_init_);
+// void WriteReg (char reg, char data, int SPI_init_);
+// //using namespace GPIO; // optional
+// int main()
+// {
+//     int init_ = gpioInitialise();
+//     if(init_ < 0)
+// 	{
+// 		std::cout << "Problema initializare gpio cu " << init_ << "\n";
+// 		exit(init_);
+//         return -1;
+// 	}
+// 	int verify_ = gpioSetMode(CE_PIN, JET_OUTPUT);
+// 	if(verify_ < 0)
+// 	{
+// 		std::cout << "Nu a mers setarea pinului CE, codul: " << verify_ << "\n";
+// 		exit(init_);
+//         return -2;
+// 	}
+// 	verify_ = gpioSetMode(CSN_PIN, JET_OUTPUT);
+//     if(verify_ < 0)
+// 	{
+// 		std::cout << "Nu a mers setarea pinului CSN, codul: " << verify_ << "\n";
+// 		exit(init_);
+// 	}
+// 	else
+// 	{
+// 		std::cout << "A mers setarea pinului CSN. Codul: " << verify_ << "\n";
+// 	}
+
+// 	int SPI_init_ = spiOpen(0, 10000000, 0, 5, 8, 0, 0);
+
+// 	if (SPI_init_ < 0)
+// 	{
+// 			/* Port SPI2 opening failed */
+// 		printf("Port SPI1 opening failed. Error code:  %d\n", SPI_init_);
+// 		exit(init_);
+//         return -3;
+// 	}
+// 	usleep(5);
+// 	// WriteReg(SETUP_RETR, 5 << ARD | 15, SPI_init_);
+//     WriteReg(CONFIG, 0x02, SPI_init_);
+// 	char readChannel = 0x0F;
+// 	// WriteReg(RF_SETUP, readChannel, SPI_init_);
+// 	readChannel = ReadReg(CONFIG, SPI_init_);
+//     return 0;
+// }
+
+
+// void WriteReg (char reg, char data, int SPI_init_)
+// {
+// 	int status{};
+// 	char buf[2]{};
+// 	char spiRx[32]{};
+// 	buf[0] = W_REGISTER | reg;//|1<<5;
+// 	buf[1] = data;
+// 	// char cmd = W_REGISTER;
+	
+// 	//pentru a selecta
+// 	int verify_ = gpioWrite(CSN_PIN,0);
+// 	verify_ = gpioWrite(CE_PIN, 1);
+// 	// verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
+// 	// usleep(10);
+// 	if(verify_)
+// 	{
+// 		verify_ = spiXfer(SPI_init_, buf, spiRx, 2);
+// 		// usleep(10);
+// 	}
+// 	status = (int)spiRx[0];
+// 	gpioWrite(CSN_PIN,1);
+// }
+
+// char ReadReg (char reg, int SPI_init_)
+// {
+// 	char data='0';
+// 	int status{};
+// 	char spiRx[32]{};
+// 	char cmd[2]{};
+// 	cmd[0] = R_REGISTER | reg;
+// 	cmd[1] = NOP;
+// 	//pentru a selecta dispozitivul
+// 	gpioWrite(CSN_PIN,0);
+// 	int verify_ = spiXfer(SPI_init_, cmd, spiRx, 2);
+// 	status = (int)spiRx[0];
+// 	data = spiRx[1];
+// 	gpioWrite(CSN_PIN,1);
+// 	return data;
+// }
 
 int main()
 {
-	
+	char dataTx[] = {"Buna Cristi!"};
+	char txAddress[] = {"1Node"};
+	char rxAddress[] = {"2Node"};
+	char data[32] = {};
 
-//	GPIO::setmode(GPIO::BOARD);
-//	RF24 radio = RF24(15,0);
-//	if(!radio.begin())
-//	{
-//		std::cout << "Nu merge\n";
-//		return 0;
-//	}
+	NRF24 nrf24 = NRF24();
+	
+	nrf24.RxMode(rxAddress, 76);
+	while(1)
+	{
+		if(nrf24.IsDataAvailable(1))
+		{
+			nrf24.ReceiveData(data);
+			for(int i = 0; i < 32; i++)
+			{
+				std::cout << data[i] << " ";
+			}
+			std::cout << "\n";
+		}
+	}
 }
+
