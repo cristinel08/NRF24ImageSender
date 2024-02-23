@@ -41,6 +41,6 @@ MISO - 23 |  IRQ -
 
 
 ##What I've done so far:
-  1) Installed the OS on the Jetson Nano and installed the activate the spi.
+  1) Installed the OS on the Jetson Nano and installed the spi drivers.
   1) Using the NRF24L01+ and the library RF24 as an example, I managed to create my own libray to receive data from the pico.
   2) Tested the time to transmit a 128x96 image between the RF24 library and my library (the RF24 was faster, but it lead to strange functionality on the Jetson).
