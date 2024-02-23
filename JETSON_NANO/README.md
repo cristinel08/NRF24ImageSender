@@ -40,7 +40,7 @@ MISO - 23 |  IRQ -
      https://forums.developer.nvidia.com/t/how-can-i-enable-spi-communication-on-jetson-nano-module/229228/6
 
 
-##What I've done so far:
+## What I've done so far:
   1) Installed the OS on the Jetson Nano and installed the spi drivers.
   1) Using the NRF24L01+ and the library RF24 as an example, I managed to create my own libray to receive data from the pico.
   2) Tested the time to transmit a 128x96 image between the RF24 library and my library (the RF24 was faster, but it lead to strange functionality on the Jetson).
