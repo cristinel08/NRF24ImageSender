@@ -39,11 +39,8 @@ MISO - 23 |  IRQ -
   3) You will need to activate download and activate the spi. The JetPack doesn't include SPI so will need to do this. I followed the steps from the jetson forums:
      https://forums.developer.nvidia.com/t/how-can-i-enable-spi-communication-on-jetson-nano-module/229228/6
 
-watched a series on youtube to get the configuration and the trasmiting part done
-here is the link:
 
-https://www.youtube.com/watch?v=mB7LsiscM78M
-
- 
-
-So far managed to create a library for the nrf24l01 to transmit and receive data, now I have to test the comunication with the raspberry pi pico connected to another nrf24
+## What I've done so far:
+  1) Installed the OS on the Jetson Nano and installed the spi drivers.
+  1) Using the NRF24L01+ and the library RF24 as an example, I managed to create my own libray to receive data from the pico.
+  2) Tested the time to transmit a 128x96 image between the RF24 library and my library (the RF24 was faster, but it lead to strange functionality on the Jetson).

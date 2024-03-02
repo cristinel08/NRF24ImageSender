@@ -16,15 +16,23 @@ find_library(GPIO_LIBS
 	     PATHS /usr/lib
 	     REQUIRED
 )
-
+set(DARKNET  ~/00GIT/darknet/)
+find_library(DARKNET_LIB
+	     NAMES "darknet"
+	     PATHS ~/00GIT/darknet/
+	     REQUIRED
+)
+find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
-
+option(OPENCV ON)
 message(STATUS "ljetgpio_LIBS = ${GPIO_LIBS}")
+message(STATUS "DARKNET_LIBS = ${DARKNET_LIB}")
 message(STATUS "OpenCV_LIBS=${OpenCV_LIBS}")
 
-set(EXECUTABLE
-	${ROOT_DIR}/src/RF24.cpp
-	${ROOT_DIR}/inc/RF24.h
+file(GLOB EXECUTABLE
+	src/*.cpp
+	inc/*.h
+	#${ROOT_DIR}/src/main.cpp
 	#${ljetgpio_INCLUDE_DIRS}/jetgpio.h
 )
 
@@ -32,6 +40,8 @@ set(INCLUDES
    {ljetgpio_INCLUDE_DIRS}
    {OpenCV_INCLUDE_DIRS}
    ${ROOT_DIR}/inc/
+   ${DARKNET}/include/
+   ${ROOT_DIR}/3rdparty/stb/include/
 )
 
 add_executable(${PROJECT_NAME} ${EXECUTABLE})
@@ -41,6 +51,11 @@ add_executable(${PROJECT_NAME} ${EXECUTABLE})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(${PROJECT_NAME} "${GPIO_LIBS}")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE  "OPENCV")
+
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
+target_link_libraries(${PROJECT_NAME} "${DARKNET_LIB}")
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
