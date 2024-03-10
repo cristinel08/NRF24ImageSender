@@ -206,31 +206,11 @@
 #define Manual_60HZ                    2
 #define Auto_Detection                 3
 
-/****************************************************/
-/* I2C Control Definition 													*/
-/****************************************************/
-#define I2C_ADDR_8BIT 0
-#define I2C_ADDR_16BIT 1
-#define I2C_REG_8BIT 0
-#define I2C_REG_16BIT 1
-#define I2C_DAT_8BIT 0
-#define I2C_DAT_16BIT 1
 
-/* Register initialization tables for SENSORs */
-/* Terminating list entry for reg */
-#define SENSOR_REG_TERM_8BIT                0xFF
-#define SENSOR_REG_TERM_16BIT               0xFFFF
-/* Terminating list entry for val */
-#define SENSOR_VAL_TERM_8BIT                0xFF
-#define SENSOR_VAL_TERM_16BIT               0xFFFF
 
 //Define maximum frame buffer size
 #if (defined OV2640_MINI_2MP)
 #define MAX_FIFO_SIZE		0x5FFFF			//384KByte
-#elif (defined OV5642_MINI_5MP || defined OV5642_MINI_5MP_BIT_ROTATION_FIXED || defined ARDUCAM_SHIELD_REVC)
-#define MAX_FIFO_SIZE		0x7FFFF			//512KByte
-#else
-#define MAX_FIFO_SIZE		0x7FFFFF		//8MByte
 #endif 
 
 /****************************************************/
@@ -243,11 +223,6 @@
 #if !(defined OV2640_MINI_2MP)
 	#define ARDUCHIP_FRAMES			  0x01  //FRAME control register, Bit[2:0] = Number of frames to be captured																		//On 5MP_Plus platforms bit[2:0] = 7 means continuous capture until frame buffer is full
 #endif
-
-#define ARDUCHIP_MODE      		0x02  //Mode register
-#define MCU2LCD_MODE       		0x00
-#define CAM2LCD_MODE       		0x01
-#define LCD2MCU_MODE       		0x02
 
 #define ARDUCHIP_TIM       		0x03  //Timming control
 #if !(defined OV2640_MINI_2MP)
@@ -267,15 +242,8 @@
 #define ARDUCHIP_FIFO      		0x04  //FIFO and I2C control
 #define FIFO_CLEAR_MASK    		0x01
 #define FIFO_START_MASK    		0x02
-#define FIFO_RDPTR_RST_MASK     0x10
-#define FIFO_WRPTR_RST_MASK     0x20
 
-#define ARDUCHIP_GPIO			  0x06  //GPIO Write Register
-#if !(defined (ARDUCAM_SHIELD_V2) || defined (ARDUCAM_SHIELD_REVC))
-#define GPIO_RESET_MASK			0x01  //0 = Sensor reset,							1 =  Sensor normal operation
-#define GPIO_PWDN_MASK			0x02  //0 = Sensor normal operation, 	1 = Sensor standby
-#define GPIO_PWREN_MASK			0x04	//0 = Sensor LDO disable, 			1 = sensor LDO enable
-#endif
+
 
 #define BURST_FIFO_READ			0x3C  //Burst FIFO read operation
 #define SINGLE_FIFO_READ		0x3D  //Single FIFO read operation
