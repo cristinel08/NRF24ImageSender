@@ -1,10 +1,8 @@
 #include "CameraOV2640.h"
 #include "hardware/i2c.h"
 #include "hardware/spi.h"
-#include "hardware/irq.h"
 #include "pico/binary_info.h"
 #include "ov2640.h"
-#include "ov5642_regs.h"
 
 ArduCAM::ArduCAM()
 {
@@ -334,7 +332,7 @@ uint8_t buf[2];
 				wrSensorReg8_8(0x7d, 0x20);
 				wrSensorReg8_8(0x7d, 0x20);
 				wrSensorReg8_8(0x7d, 0x2a);
-		  wrSensorReg8_8(0x7d, 0x06);	
+		  		wrSensorReg8_8(0x7d, 0x06);	
 			break;
 			case Contrast_2:
 				wrSensorReg8_8(0xff, 0x00);
@@ -502,17 +500,6 @@ byte ArduCAM::rdSensorReg8_8(uint8_t regID, uint8_t* regDat)
   i2c_read_blocking(I2C_PORT, sensor_addr, regDat,  1, false );
   return 1;
 	
-}
-
-byte ArduCAM::rdSensorReg16_8(uint16_t regID, uint8_t* regDat)
-{
-	uint8_t buffer[2]={0};
-	buffer[0]=(regID>>8)&0xff;
-	buffer[1]=regID&0xff;
-	i2c_write_blocking(I2C_PORT, sensor_addr, buffer, 2, true );
-//	i2c_write_blocking(I2C_PORT, sensor_addr, &low, 1, true );
-	i2c_read_blocking(I2C_PORT, sensor_addr, regDat,  1, false );
-	return 1;
 }
 
 

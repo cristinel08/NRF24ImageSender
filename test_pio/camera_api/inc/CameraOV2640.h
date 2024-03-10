@@ -14,7 +14,7 @@
 /****************************************************/
 #define BMP 	0
 #define JPEG	1
-#define RAW	  2
+#define RAW	    2
 
 #define OV7670		0	
 #define MT9D111_A	1
@@ -46,38 +46,6 @@
 #define OV2640_1280x1024	7	//1280x1024
 #define OV2640_1600x1200	8	//1600x1200
 
-
-
-#define OV3640_176x144 		0	//176x144
-#define OV3640_320x240 		1	//320x240
-#define OV3640_352x288 		2	//352x288
-#define OV3640_640x480		3	//640x480
-#define OV3640_800x600 		4	//800x600
-#define OV3640_1024x768		5 //1024x768
-#define OV3640_1280x960	  6	//1280x960
-#define OV3640_1600x1200	7	//1600x1200
-#define OV3640_2048x1536	8	//2048x1536
-
-
-#define OV5642_320x240 		0	//320x240
-#define OV5642_640x480		1	//640x480
-#define OV5642_1024x768		2	//1024x768
-#define OV5642_1280x960 	3	//1280x960
-#define OV5642_1600x1200	4	//1600x1200
-#define OV5642_2048x1536	5	//2048x1536
-#define OV5642_2592x1944	6	//2592x1944
-#define OV5642_1920x1080  7
-
-
-#define OV5640_320x240 		0	//320x240 
-#define OV5640_352x288		1	//352x288
-#define OV5640_640x480 	  2	//640x480
-#define OV5640_800x480	  3	//800x480
-#define OV5640_1024x768	  4	//1024x768
-#define OV5640_1280x960	  5	//1280x960	
-#define OV5640_1600x1200	6	 //1600x1200
-#define OV5640_2048x1536	7  //2048x1536
-#define OV5640_2592x1944	8	 //2592x1944
 
 
 
@@ -405,83 +373,23 @@ class ArduCAM
 	// Write 8 bit values to 8 bit register address
 	int wrSensorRegs8_8(const struct sensor_reg*);
 	
-	// Write 16 bit values to 8 bit register address
-	int wrSensorRegs8_16(const struct sensor_reg*);
-	
-	// Write 8 bit values to 16 bit register address
-	int wrSensorRegs16_8(const struct sensor_reg*);
-	
-  // Write 16 bit values to 16 bit register address
-	int wrSensorRegs16_16(const struct sensor_reg*);
-	
 	// Read/write 8 bit value to/from 8 bit register address	
 	byte wrSensorReg8_8(int regID, int regDat);
 	byte rdSensorReg8_8(uint8_t regID, uint8_t* regDat);
-	
-	// Read/write 16 bit value to/from 8 bit register address
-	byte wrSensorReg8_16(int regID, int regDat);
-	byte rdSensorReg8_16(uint8_t regID, uint16_t* regDat);
-	
-	// Read/write 8 bit value to/from 16 bit register address
-	byte wrSensorReg16_8(int regID, int regDat);
-	byte rdSensorReg16_8(uint16_t regID, uint8_t* regDat);
-	
-	// Read/write 16 bit value to/from 16 bit register address
-	byte wrSensorReg16_16(int regID, int regDat);
-	byte rdSensorReg16_16(uint16_t regID, uint16_t* regDat);
 
 	void OV2640_set_JPEG_size(uint8_t size);
-	void OV3640_set_JPEG_size(uint8_t size);
-	void OV5642_set_JPEG_size(uint8_t size);
-	void OV5640_set_JPEG_size(uint8_t size);
-	
-	void OV5642_set_RAW_size (uint8_t size);
 	
 	
 	void OV2640_set_Light_Mode(uint8_t Light_Mode);
-  void OV3640_set_Light_Mode(uint8_t Light_Mode);
-	void OV5642_set_Light_Mode(uint8_t Light_Mode);
-	void OV5640_set_Light_Mode(uint8_t Light_Mode);
 	
 	void OV2640_set_Color_Saturation(uint8_t Color_Saturation);
-	void OV3640_set_Color_Saturation(uint8_t Color_Saturation);
-	void OV5642_set_Color_Saturation(uint8_t Color_Saturation);
-	void OV5640_set_Color_Saturation(uint8_t Color_Saturation);
 	
 	
 	void OV2640_set_Brightness(uint8_t Brightness);
-	void OV3640_set_Brightness(uint8_t Brightness);
-  void OV5642_set_Brightness(uint8_t Brightness);
-  void OV5640_set_Brightness(uint8_t Brightness);
 	
 	void OV2640_set_Contrast(uint8_t Contrast);
-	void OV3640_set_Contrast(uint8_t Contrast);
-	void OV5642_set_Contrast(uint8_t Contrast);
-	void OV5640_set_Contrast(uint8_t Contrast);
 	
-	void OV2640_set_Special_effects(uint8_t Special_effect);
-	void OV3640_set_Special_effects(uint8_t Special_effect);
-	void OV5642_set_Special_effects(uint8_t Special_effect);
-	void OV5640_set_Special_effects(uint8_t Special_effect);
-	
-	
-	void OV3640_set_Exposure_level(uint8_t level);
-	void OV3640_set_Sharpness(uint8_t Sharpness);
-	void OV3640_set_Mirror_Flip(uint8_t Mirror_Flip);
-	
-	
-	void OV5642_set_hue(uint8_t degree);
-	void OV5642_set_Exposure_level(uint8_t level);
-	void OV5642_set_Sharpness(uint8_t Sharpness);
-  void OV5642_set_Mirror_Flip(uint8_t Mirror_Flip);
-  void OV5642_set_Compress_quality(uint8_t quality);
-  void OV5642_Test_Pattern(uint8_t Pattern);
-   
-  
-  void OV5640_set_EV(uint8_t EV);
-  void OV5640_set_Night_Mode(uint8_t Night_mode);
-  void OV5640_set_Banding_Filter(uint8_t Banding_Filter);
-	
+	void OV2640_set_Special_effects(uint8_t Special_effect);	
 	
 	
 	
@@ -497,67 +405,4 @@ class ArduCAM
 	byte sensor_model;
 	byte sensor_addr;
 };
-
-#if defined OV7660_CAM	
-	#include "ov7660_regs.h"
-#endif
-
-#if defined OV7725_CAM	
-	#include "ov7725_regs.h"
-#endif
-
-#if defined OV7670_CAM	
-	#include "ov7670_regs.h"
-#endif
-
-#if defined OV7675_CAM
-	#include "ov7675_regs.h"
-#endif
-
-#if ( defined(OV5642_CAM) || defined(OV5642_MINI_5MP) || defined(OV5642_MINI_5MP_BIT_ROTATION_FIXED) || defined(OV5642_MINI_5MP_PLUS) )	
-	#include "ov5642_regs.h"
-#endif
-
-#if (defined(OV3640_CAM) || defined(OV3640_MINI_3MP))	
-	#include "ov3640_regs.h"
-#endif
-
-#if (defined(OV2640_CAM) || defined(OV2640_MINI_2MP) || defined(OV2640_MINI_2MP_PLUS))
-	#include "ov2640_regs.h"
-#endif
-
-#if defined MT9D111A_CAM  || defined MT9D111B_CAM 	
-	#include "mt9d111_regs.h"
-#endif
-
-#if defined MT9M112_CAM	
-	#include "mt9m112_regs.h"
-#endif
-
-#if defined MT9V111_CAM	
-	#include "mt9v111_regs.h"
-#endif
-
-#if ( defined(OV5640_CAM)	|| defined(OV5640_MINI_5MP_PLUS) )
-	#include "ov5640_regs.h"
-#endif
-
-#if defined MT9M001_CAM	
-	#include "mt9m001_regs.h"
-#endif
-
-#if defined MT9T112_CAM	
-	#include "mt9t112_regs.h"
-#endif
-
-#if defined MT9D112_CAM	
-	#include "mt9d112_regs.h"
-#endif
-
-#if defined MT9M034_CAM	
-	#include "mt9m034_regs.h"
-#endif
-
-
-
 #endif
