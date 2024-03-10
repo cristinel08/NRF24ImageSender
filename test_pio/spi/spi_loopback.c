@@ -102,6 +102,7 @@ int main() {
     );
 
     writeSPI(&spi, 0x00, 0x58);
+    sleep_ms(10);
     readSPI(&spi, 0x00, &data);
     if (data == 0x58)
     {

@@ -15,7 +15,14 @@ set(INC
 
 add_executable(${PROJECT_NAME} ${EXECUTABLE})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pico_stdlib hardware_i2c hardware_spi hardware_irq)
+target_link_libraries(${PROJECT_NAME} PUBLIC 
+                        pico_stdlib 
+                        hardware_i2c 
+                        hardware_spi 
+                        hardware_irq	
+                        hardware_dma
+                        hardware_pwm
+                    )           
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${INC})
 
