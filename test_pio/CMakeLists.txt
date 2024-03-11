@@ -23,7 +23,8 @@ include(example_auto_set_url.cmake)
 #add_subdirectory(blink)
 
 #add_subdirectory(pio_blink)
-add_subdirectory(camera_api)
+# add_subdirectory(camera_api)
+add_subdirectory(nrf_api)
 #add_subdirectory(spi)
 
 # Add hello world example
