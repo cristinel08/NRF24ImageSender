@@ -1,6 +1,5 @@
 #include<RF24.h>
 #include<iostream>
-#include <JetsonGPIO.h>
 #include<time.h>
 #include<string>
 #include<ctime>
@@ -99,22 +98,25 @@ int main()
 	char dataTx[] = {"Buna Cristi!"};
 	char txAddress[] = {"1Node"};
 	char rxAddress[] = {"2Node"};
-	char data[32] = {};
+	char data[32] = {"a,b,c,d,e,f,g,h,i,j,k,l,m,n,p,q"};
 
 	NRF24 nrf24 = NRF24();
 	
-	nrf24.RxMode(rxAddress, 76);
+	// nrf24.RxMode(rxAddress, 76);
+	nrf24.TxMode(txAddress, 76);
+	// nrf24.OpenWritingPipe(txAddress);
 	while(1)
 	{
-		if(nrf24.IsDataAvailable(1))
-		{
-			nrf24.ReceiveData(data);
-			for(int i = 0; i < 32; i++)
-			{
-				std::cout << data[i] << " ";
-			}
-			std::cout << "\n";
-		}
+		nrf24.TransmitData(data);
+		// if(nrf24.IsDataAvailable(1))
+		// {
+		// 	nrf24.ReceiveData(data);
+		// 	for(int i = 0; i < 32; i++)
+		// 	{
+		// 		std::cout << data[i] << " ";
+		// 	}
+		// 	std::cout << "\n";
+		// }
 	}
 }
 

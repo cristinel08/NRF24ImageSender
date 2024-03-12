@@ -220,15 +220,24 @@ void NRF24::SendCommand(char cmd)
 void NRF24::TransmitData(char* data)
 {
 	//char cmd
+	char* txData = spiTx;
+	char* rxData = spiRx;
+	const char* current = data;
+	int size = 32 + 1;
+	*txData++ = W_TX_PAYLOAD;
+	while(size--)
+	{
+		*txData++ = *current++;
+	}
 	//disablePin(CSN_PIN);
+	size = 33;
 
 	disablePin(CSN_PIN);
 
-	SendCommand(W_TX_PAYLOAD);
 	// verify_ = spiXfer(SPI_init_, (char*)W_TX_PAYLOAD, nullptr, 1);
 	if(verify_)
 	{	
-		verify_ = spiXfer(SPI_init_, data, nullptr,	32);
+		verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
 	}
 
 	enablePin(CSN_PIN);
@@ -237,21 +246,23 @@ void NRF24::TransmitData(char* data)
 
 	char fifo = ReadReg(FIFO_STATUS);
 	SendCommand(NOP);
+	// SendCommand(FLUSH_TX);
+	// SendCommand(NOP);
 	
-	if(fifo&(1<<4))
-	{
-		if(!(fifo&(1<<3)))
-		{
-			std::cout << "It transmited data\n";
-			SendCommand(FLUSH_TX);
-			SendCommand(NOP);
-		}
-		else
-		{
-			std::cout << "The device isn't connected\n";
-			//nrfSendCommand(FLUSH_TX);
-		}
-	}
+	// if(fifo == 33)
+	// {
+	// 	if(!(fifo&(1<<3)))
+	// 	{
+	// 		std::cout << "It transmited data\n";
+	// 		SendCommand(FLUSH_TX);
+	// 		SendCommand(NOP);
+	// 	}
+	// 	else
+	// 	{
+	// 		std::cout << "The device isn't connected\n";
+	// 		//nrfSendCommand(FLUSH_TX);
+	// 	}
+	// }
 
 }
 
