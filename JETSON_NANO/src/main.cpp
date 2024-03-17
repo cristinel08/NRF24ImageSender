@@ -96,15 +96,17 @@
 int main()
 {
 	char dataTx[32]{"Buna Cristi am trimis de pe Jet"};
+	char dataRx[32]{};
 	char txAddress[]{"1Node"};
 	char rxAddress[]{"2Node"};
 	char data[32]{"a,b,c,d,e,f,g,h,i,j,k,l,m,n,p,q"};
 
 	NRF24 nrf24 = NRF24();
 	
-	// nrf24.RxMode(rxAddress, 76);
-	nrf24.TxMode(txAddress, 76);
+	nrf24.RxMode(rxAddress, 76);
 	bool dataTransmited{true};
+	nrf24.OpenWritingPipe(txAddress);
+	// nrf24.TxMode(txAddress, 76);
 	// nrf24.OpenWritingPipe(txAddress);
 	while(1)
 	{

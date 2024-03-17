@@ -1,6 +1,13 @@
 #include"RF24.h"
 #include "nrf24l01.h"
 //write a single byte
+NRF24::~NRF24()
+{
+	disablePin(CE_PIN);
+	WriteReg(CONFIG, 0x00);
+	spiClose(SPI_init_);
+	disablePin(CSN_PIN);
+}
 void NRF24::WriteReg (char reg, char data)
 {
 	char buf[2];
@@ -138,7 +145,8 @@ NRF24::NRF24()
 	disablePin(CSN_PIN);
 	usleep(5);
 
-	WriteReg(SETUP_RETR, 0x0F);	//Retransmision(5, 15)
+	
+	WriteReg(SETUP_RETR, 0x00);	//Retransmision(5, 15)
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
@@ -150,7 +158,7 @@ NRF24::NRF24()
 	{
 		WriteReg(RX_ADDR_P0 + i, 32);
 	}
-	WriteReg(FEATURE, 0);
+	WriteReg(FEATURE, 0x00); //enable ack_payload and dynamic_payload
 
 	WriteReg(SETUP_AW, 0x03); 	//5 bytes for the tx/rx address
 
@@ -161,10 +169,9 @@ NRF24::NRF24()
 	WriteReg(STATUS, 0x70);
 
 	// WriteReg(FLUSH_RX, NOP);	//RESET RX
-	char command = FLUSH_RX;
-	spiXfer(SPI_init_, &command, nullptr, 1);
-	command = FLUSH_TX;
-	spiXfer(SPI_init_, &command, nullptr, 1);
+	SendCommand(FLUSH_RX);
+	SendCommand(FLUSH_TX);
+
 	// WriteReg(FLUSH_TX, NOP);	//RESET TX
 
 	WriteReg(CONFIG, 1 << EN_CRC | 1 << CRC0);
@@ -199,13 +206,14 @@ void NRF24::TxMode(char* address, char channel)
 	WriteReg(RF_CH, channel); 
 	
 	//write the tx address
+	WriteRegMulti(RX_ADDR_P0, address, 5);
 	WriteRegMulti(TX_ADDR, address, 5);
 	
 	//power up the device 
 	char config = ReadReg(CONFIG);
 	config = config | (1 << 1);
 	WriteReg(CONFIG, config);
-	WriteReg(EN_RXADDR, ReadReg(EN_RXADDR) | 1);
+
 	// WriteReg(CONFIG, 0x0f);
 	enablePin(CE_PIN);
 	//disablePin(CSN_PIN);
@@ -221,6 +229,12 @@ void NRF24::SendCommand(char cmd)
 void NRF24::TransmitData(char* data)
 {
 	//char cmd
+	if(ReadReg(CONFIG) % 2)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, ReadReg(CONFIG) - 1);
+		enablePin(CE_PIN);
+	}
 	char* txData = spiTx;
 	char* rxData = spiRx;
 	const char* current = data;
@@ -243,31 +257,30 @@ void NRF24::TransmitData(char* data)
 
 	enablePin(CSN_PIN);
 
-	usleep(250);
-
 	char fifo = ReadReg(STATUS);
 	SendCommand(NOP);
 	// SendCommand(FLUSH_TX);
 	// SendCommand(NOP);
-	while(!(fifo&(1<<4)))
-	{
-		fifo = ReadReg(STATUS);
-	}
-	fifo = ReadReg(FIFO_STATUS);
-	if(!(fifo&(1<<3)))
-	{
-		std::cout << "It transmited data\n";
-		// SendCommand(FLUSH_TX);
-		WriteReg(STATUS, 1<<4|1<<5); //clear bit MAX_RT
-		SendCommand(NOP);
-		WriteReg(FLUSH_TX, NOP);
-		SendCommand(NOP);
-	}
-	else
-	{
-		std::cout << "The device isn't connected\n";
-		//nrfSendCommand(FLUSH_TX);
-	}
+	// if(fifo & (1 << MAX_RT) || fifo & (1 << TX_DS))
+	// {
+		// if(!(fifo&(1<<3)))
+		{
+			printf("It transmited data %32s\n", data);
+			// SendCommand(FLUSH_TX);
+			WriteReg(STATUS, 1<< MAX_RT | 1<< TX_DS); //clear bit MAX_RT
+			SendCommand(NOP);
+			SendCommand(FLUSH_TX);
+			SendCommand(NOP);
+		}
+
+		// else
+		// {
+		// 	std::cout << "The device isn't connected\n";
+		// 	//nrfSendCommand(FLUSH_TX);
+		// }
+
+	// }
+	
 
 }
 
@@ -294,7 +307,7 @@ void NRF24::RxMode(char* address, char channel)
 	WriteReg(STATUS, 0x70);
 	char en_rxaddr = ReadReg(EN_RXADDR);
 
-	WriteReg(EN_RXADDR, en_rxaddr | (1<<1)); 
+	WriteReg(EN_RXADDR, en_rxaddr | (1 << 1) | 1 << 0); 
 	// WriteReg(CONFIG, 0x0e);
 	enablePin(CE_PIN);
 	//disablePin(CSN_PIN);
@@ -303,18 +316,24 @@ void NRF24::RxMode(char* address, char channel)
 
 uint8_t NRF24::IsDataAvailable(int pipeNr)
 {
+	if(ReadReg(CONFIG) % 2 == 0)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, ReadReg(CONFIG) + 1);
+		enablePin(CE_PIN);
+	}
 	char status = ReadReg(STATUS);
 
 	if ((status & (1 << 6)) && 
 	    (status & (pipeNr << 1)))
 	{
-		WriteReg(STATUS, (1 << 6));
+		WriteReg(STATUS, (1 << RX_DR));
 		return 1;
 	}
 	return 0;
 }
 
-void NRF24::ReceiveData(char* data)
+bool NRF24::ReceiveData(char* data)
 {
 	char* currentData = data;
 	char* txData = spiTx;
@@ -333,11 +352,7 @@ void NRF24::ReceiveData(char* data)
 	enablePin(CSN_PIN);
 
 	char fifo = ReadReg(FIFO_STATUS);
-	if(fifo & (1 << 1))
-	{
-		SendCommand(FLUSH_RX);
-		WriteReg(STATUS, 1 << RX_DR);
-	}
+	return!(fifo & (1 << 0));
 }
 
 
