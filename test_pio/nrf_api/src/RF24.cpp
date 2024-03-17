@@ -1,6 +1,13 @@
 #include"RF24.h"
 #include "nrf24l01.h"
 //write a single byte
+NRF24::~NRF24()
+{
+	disablePin(CE_PIN);
+	WriteReg(CONFIG, 0x00);
+	spi_deinit(NRF_SPI_PORT);
+	disablePin(CSN_PIN);
+}
 void NRF24::WriteReg (char reg, char data)
 {
 	uint8_t buf[2];
@@ -72,7 +79,6 @@ char NRF24::ReadReg (char reg)
 	//pico code
 	spi_write_read_blocking(NRF_SPI_PORT, cmd, spiRx, 2);
 	#endif
-	printf("The ReadReg status is: %x\n", spiRx[0]);
 	data = spiRx[1];
 	enablePin(CSN_PIN);
 	return data;
@@ -336,14 +342,26 @@ void NRF24::SendCommand(char cmd)
 	enablePin(CSN_PIN);
 }
 
-void NRF24::TransmitData(char* data)
+void NRF24::TransmitData(uint8_t* data)
 {
 	//char cmd
 	//disablePin(CSN_PIN);
-
+	if(ReadReg(CONFIG) % 2)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, ReadReg(CONFIG) - 1);
+		enablePin(CE_PIN);
+		printf("ENTER IN TRANSMIT MODE\n");
+	}
+	uint8_t* txData = spiTx; 
+	*txData++ = W_TX_PAYLOAD;
+	uint8_t size = 33;
+	while(--size)
+	{
+		*txData++ = *data++;
+	}
+	size = 33;
 	disablePin(CSN_PIN);
-
-	SendCommand(W_TX_PAYLOAD);
 	// verify_ = spiXfer(SPI_init_, (char*)W_TX_PAYLOAD, nullptr, 1);
 	#ifndef JETSON_BOARD
 	if(verify_)
@@ -352,7 +370,8 @@ void NRF24::TransmitData(char* data)
 	}
 	#else
 	//pico code
-	spi_write_blocking(NRF_SPI_PORT, (const uint8_t*)data, 32);
+	spi_write_read_blocking(NRF_SPI_PORT, spiTx, nullptr, size);
+	//spi_write_blocking(NRF_SPI_PORT, (const uint8_t*)data, 32);
 	#endif
 
 	enablePin(CSN_PIN);
@@ -360,22 +379,24 @@ void NRF24::TransmitData(char* data)
 	// usleep(1);
 	sleep_us(1);
 
-	char fifo = ReadReg(FIFO_STATUS);
+	char fifo = ReadReg(STATUS);
 	SendCommand(NOP);
 	
-	if(fifo&(1<<4))
+	if(fifo & (1 << MAX_RT) || fifo & (1 << TX_DS) || fifo & (1 << RX_DR))
 	{
-		if(!(fifo&(1<<3)))
-		{
-			std::cout << "It transmited data\n";
+		// if(!(fifo&(1<<3)))
+		// {
+			printf("It transmited data\n");
+			WriteReg(STATUS, 1 << MAX_RT | 1 << TX_DS | 1 << RX_DR);
+			SendCommand(NOP);
 			SendCommand(FLUSH_TX);
 			SendCommand(NOP);
-		}
-		else
-		{
-			std::cout << "The device isn't connected\n";
+		// }
+		// else
+		// {
+			// std::cout << "The device isn't connected\n";
 			//nrfSendCommand(FLUSH_TX);
-		}
+		// }
 	}
 
 }
@@ -412,6 +433,13 @@ void NRF24::RxMode(char* address, char channel)
 
 uint8_t NRF24::IsDataAvailable(int pipeNr)
 {
+	if(ReadReg(CONFIG) % 2 == 0)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, ReadReg(CONFIG) + 1);
+		printf("ENTER IN RX_MODE: \n");
+		enablePin(CE_PIN);
+	}
 	char status = ReadReg(STATUS);
 	if ((status & (1 << 6)) && 
 	    (status & (pipeNr << 1)))
@@ -443,6 +471,7 @@ bool NRF24::ReceiveData(char* data)
 	#endif
 	char status = *rxData++;
 	memcpy(data, rxData, sizeof(char)*32);
+	printf("%32s\n", rxData);
 	enablePin(CSN_PIN);
 
 	//asta e un bug, trb sa continui sa citesc pana cand eliberez memoria
