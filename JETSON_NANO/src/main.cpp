@@ -108,18 +108,19 @@ int main()
 	nrf24.OpenWritingPipe(txAddress);
 	// nrf24.TxMode(txAddress, 76);
 	// nrf24.OpenWritingPipe(txAddress);
+	int numReceived{0};
 	while(1)
 	{
-		if(dataTransmited)
+		while(nrf24.IsDataAvailable(1))
 		{
-			nrf24.TransmitData(data);
+			nrf24.ReceiveData(dataRx);
+			printf("While true loop %32s\n", dataRx);
+			// printf("Outside loop data: %32s\n", dataRx);
+			printf("NumReceived: %d\n", ++numReceived);
 		}
-		else
-		{
-			nrf24.TransmitData(dataTx);
-		}
-		dataTransmited = !dataTransmited;
+		// dataTransmited = !dataTransmited;
 		sleep(1);
+	
 	}
 }
 

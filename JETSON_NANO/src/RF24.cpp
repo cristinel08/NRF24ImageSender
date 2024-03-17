@@ -170,7 +170,9 @@ NRF24::NRF24()
 
 	// WriteReg(FLUSH_RX, NOP);	//RESET RX
 	SendCommand(FLUSH_RX);
+	SendCommand(NOP);
 	SendCommand(FLUSH_TX);
+	SendCommand(NOP);
 
 	// WriteReg(FLUSH_TX, NOP);	//RESET TX
 
@@ -307,7 +309,7 @@ void NRF24::RxMode(char* address, char channel)
 	WriteReg(STATUS, 0x70);
 	char en_rxaddr = ReadReg(EN_RXADDR);
 
-	WriteReg(EN_RXADDR, en_rxaddr | (1 << 1) | 1 << 0); 
+	WriteReg(EN_RXADDR, en_rxaddr | (1 << 1)); 
 	// WriteReg(CONFIG, 0x0e);
 	enablePin(CE_PIN);
 	//disablePin(CSN_PIN);
@@ -323,7 +325,7 @@ uint8_t NRF24::IsDataAvailable(int pipeNr)
 		enablePin(CE_PIN);
 	}
 	char status = ReadReg(STATUS);
-
+	SendCommand(NOP);
 	if ((status & (1 << 6)) && 
 	    (status & (pipeNr << 1)))
 	{
