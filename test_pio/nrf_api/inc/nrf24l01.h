@@ -34,6 +34,7 @@
 #define R_REGISTER    0x00
 #define W_REGISTER    0x20
 #define REGISTER_MASK 0x1F
+#define W_ACK_PAYLOAD 0xA8
 #define ACTIVATE      0x50
 #define R_RX_PL_WID   0x60
 #define R_RX_PAYLOAD  0x61
@@ -52,11 +53,11 @@
 #define CRC0		2
 #define PWR_UP		1
 
-#ifdef JETSON_BOARD
+#ifndef JETSON_BOARD
 #define CE_PIN 		15
 #define CSN_PIN 	24
 #else
-#define NRF_SPI_PORT  0
+#define NRF_SPI_PORT  spi0
 #define SCK_PIN       2
 #define MOSI_PIN      3  
 #define MISO_PIN      4
