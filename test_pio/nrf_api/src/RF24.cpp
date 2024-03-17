@@ -319,7 +319,7 @@ void NRF24::TxMode(char* address, char channel)
 	
 	//write the tx address
 	WriteRegMulti(TX_ADDR, address, 5);
-	WriteRegMulti(RX_ADDR_P0, address, 5);
+	// WriteRegMulti(RX_ADDR_P0, address, 5);
 	
 	//power up the device 
 	char config = ReadReg(CONFIG);
@@ -337,7 +337,7 @@ void NRF24::SendCommand(char cmd)
 	verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
 	#else
 	//pico_code
-	spi_write_blocking(NRF_SPI_PORT, (uint8_t*)&cmd, 1);
+	spi_write_read_blocking(NRF_SPI_PORT, (uint8_t*)&cmd, nullptr, 1);
 	#endif
 	enablePin(CSN_PIN);
 }
@@ -377,26 +377,28 @@ void NRF24::TransmitData(uint8_t* data)
 	enablePin(CSN_PIN);
 
 	// usleep(1);
-	sleep_us(1);
+	sleep_us(500);
 
-	char fifo = ReadReg(STATUS);
+	char fifo = ReadReg(FIFO_STATUS);
 	SendCommand(NOP);
 	
-	if(fifo & (1 << MAX_RT) || fifo & (1 << TX_DS) || fifo & (1 << RX_DR))
+	// if(fifo & (1 << MAX_RT) || fifo & (1 << TX_DS) || fifo & (1 << RX_DR))
+	if (!(fifo & (1 << 4)))
 	{
-		// if(!(fifo&(1<<3)))
-		// {
+		if(!(fifo&(1<<3)))
+		{
 			printf("It transmited data\n");
-			WriteReg(STATUS, 1 << MAX_RT | 1 << TX_DS | 1 << RX_DR);
+			WriteReg(STATUS, 1 << MAX_RT | 1 << TX_DS);
 			SendCommand(NOP);
 			SendCommand(FLUSH_TX);
 			SendCommand(NOP);
-		// }
-		// else
-		// {
-			// std::cout << "The device isn't connected\n";
-			//nrfSendCommand(FLUSH_TX);
-		// }
+		}
+		else
+		{
+			std::cout << "The device isn't connected\n";
+			SendCommand(FLUSH_TX);
+			SendCommand(NOP);
+		}
 	}
 
 }
