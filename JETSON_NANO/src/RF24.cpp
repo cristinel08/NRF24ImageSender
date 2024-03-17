@@ -138,7 +138,7 @@ NRF24::NRF24()
 	disablePin(CSN_PIN);
 	usleep(5);
 
-	WriteReg(SETUP_RETR, 0x00);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x0F);	//Retransmision(5, 15)
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
@@ -245,27 +245,28 @@ void NRF24::TransmitData(char* data)
 
 	usleep(250);
 
-	char fifo = ReadReg(FIFO_STATUS);
+	char fifo = ReadReg(STATUS);
 	SendCommand(NOP);
 	// SendCommand(FLUSH_TX);
 	// SendCommand(NOP);
-	
-	if(!(fifo & 1<<4))
+	while(!(fifo&(1<<4)))
 	{
-		if(!(fifo&(1<<3)))
-		{
-			std::cout << "It transmited data\n";
-			// SendCommand(FLUSH_TX);
-			WriteReg(STATUS, 1<<4|1<<5); //clear bit MAX_RT
-			SendCommand(NOP);
-			WriteReg(FLUSH_TX, NOP);
-			SendCommand(NOP);
-		}
-		else
-		{
-			std::cout << "The device isn't connected\n";
-			//nrfSendCommand(FLUSH_TX);
-		}
+		fifo = ReadReg(STATUS);
+	}
+	fifo = ReadReg(FIFO_STATUS);
+	if(!(fifo&(1<<3)))
+	{
+		std::cout << "It transmited data\n";
+		// SendCommand(FLUSH_TX);
+		WriteReg(STATUS, 1<<4|1<<5); //clear bit MAX_RT
+		SendCommand(NOP);
+		WriteReg(FLUSH_TX, NOP);
+		SendCommand(NOP);
+	}
+	else
+	{
+		std::cout << "The device isn't connected\n";
+		//nrfSendCommand(FLUSH_TX);
 	}
 
 }

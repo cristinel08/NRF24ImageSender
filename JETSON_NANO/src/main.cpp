@@ -95,28 +95,29 @@
 
 int main()
 {
-	char dataTx[] = {"Buna Cristi!"};
-	char txAddress[] = {"1Node"};
-	char rxAddress[] = {"2Node"};
-	char data[32] = {"a,b,c,d,e,f,g,h,i,j,k,l,m,n,p,q"};
+	char dataTx[32]{"Buna Cristi am trimis de pe Jet"};
+	char txAddress[]{"1Node"};
+	char rxAddress[]{"2Node"};
+	char data[32]{"a,b,c,d,e,f,g,h,i,j,k,l,m,n,p,q"};
 
 	NRF24 nrf24 = NRF24();
 	
 	// nrf24.RxMode(rxAddress, 76);
 	nrf24.TxMode(txAddress, 76);
+	bool dataTransmited{true};
 	// nrf24.OpenWritingPipe(txAddress);
 	while(1)
 	{
-		nrf24.TransmitData(data);
-		// if(nrf24.IsDataAvailable(1))
-		// {
-		// 	nrf24.ReceiveData(data);
-		// 	for(int i = 0; i < 32; i++)
-		// 	{
-		// 		std::cout << data[i] << " ";
-		// 	}
-		// 	std::cout << "\n";
-		// }
+		if(dataTransmited)
+		{
+			nrf24.TransmitData(data);
+		}
+		else
+		{
+			nrf24.TransmitData(dataTx);
+		}
+		dataTransmited = !dataTransmited;
+		sleep(1);
 	}
 }
 
