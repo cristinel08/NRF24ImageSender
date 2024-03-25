@@ -5,7 +5,7 @@ include(pico_sdk_import.cmake)
 
 include(pico_extras_import_optional.cmake)
 
-project(pico_examples C CXX ASM)
+project(ImageTransmission C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -15,6 +15,9 @@ endif()
 
 set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 
+file(GLOB EXECUTABLES
+    main.cpp)
+
 # Initialize the SDK
 pico_sdk_init()
 
@@ -22,13 +25,6 @@ include(example_auto_set_url.cmake)
 # Add blink example
 #add_subdirectory(blink)
 
-#add_subdirectory(pio_blink)
-# add_subdirectory(camera_api)
-add_subdirectory(nrf_api)
-#add_subdirectory(spi)
-
-# Add hello world example
-#add_subdirectory(hello_world)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
@@ -38,26 +34,29 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
 endif()
 
-# Hardware-specific examples in subdirectories:
-#add_subdirectory(adc)
-#add_subdirectory(clocks)
-#add_subdirectory(cmake)
-#add_subdirectory(divider)
-#add_subdirectory(dma)
-#add_subdirectory(flash)
-#add_subdirectory(gpio)
-#add_subdirectory(i2c)
-#add_subdirectory(interp)
-#add_subdirectory(multicore)
-#add_subdirectory(picoboard)
-#add_subdirectory(pico_w)
-#add_subdirectory(pio)
-#add_subdirectory(pwm)
-#add_subdirectory(reset)
-#add_subdirectory(rtc)
-#add_subdirectory(spi)
-#add_subdirectory(system)
-#add_subdirectory(timer)
-#add_subdirectory(uart)
-#add_subdirectory(usb)
-#add_subdirectory(watchdog)
+add_subdirectory(camera_api)
+add_subdirectory(nrf_api)
+
+add_executable(${PROJECT_NAME} ${EXECUTABLES})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+                      RF24
+                      CameraOV2640API)
+
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 0)
+# # create map/bin/hex file etc.
+pico_add_extra_outputs(${PROJECT_NAME})
+
+# add url via pico_set_program_url
+example_auto_set_url(${PROJECT_NAME})
+# set(INC 
+#     ${CAMERA_ROOT}/inc/
+#     ${RF24_ROOT}/inc/
+# )
+
+# add_executable(${PROJECT_NAME} ${EXECUTABLES})
+
+
+
+

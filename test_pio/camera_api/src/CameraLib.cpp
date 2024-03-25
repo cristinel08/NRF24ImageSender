@@ -4,12 +4,12 @@
 
 CameraLib::CameraLib()
 {
+    stdio_init_all();
+    tusb_init();
     gpio_init(LED_BOARD);
     gpio_set_dir(LED_BOARD, GPIO_OUT);
     toggle = true;
     gpio_put(LED_BOARD, toggle);
-    stdio_init_all();
-    tusb_init();
 	// put your setup code here, to run once:
 	myCAM.Arducam_init();	
     gpio_init(CS);
@@ -37,7 +37,6 @@ uint8_t* CameraLib::ReadFifoCam(int& length)
         gpio_put(LED_BOARD, toggle);
         length = myCAM.read_fifo_length();
         //std::cout << std::to_string(length).c_str();
-        printf("%.4s\n",std::to_string(length).c_str());
         imageBuf = new uint8_t[length];//*sizeof(uint8_t));
         myCAM.CS_LOW();
         myCAM.set_fifo_burst();//Set fifo burst mode

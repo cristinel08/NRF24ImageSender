@@ -42,7 +42,6 @@ void NRF24::WriteReg (char reg, char data)
 void NRF24::WriteRegMulti(char reg, char* data,int size)
 {
 	disablePin(CSN_PIN);
-	uint8_t* rxData = spiRx;
 	uint8_t* txData = spiTx;
 	int lenData = size + 1; //32 bytes data + 1 byte command
 	
@@ -58,8 +57,6 @@ void NRF24::WriteRegMulti(char reg, char* data,int size)
 	//pico_code
 	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, lenData);
 	#endif
-
-	char status = *rxData;
 
 	enablePin(CSN_PIN);
 }
@@ -101,7 +98,7 @@ void NRF24::ReadMulti(char reg, char* data, int size)
 	//pico code
 	spi_write_read_blocking(NRF_SPI_PORT, txData, rxData, lenData);
 	#endif
-	char status = *rxData++;
+	rxData++; //status
 	while(--lenData)
 	{
 		*data++ = *rxData++;
@@ -159,8 +156,8 @@ NRF24::NRF24()
 	}
 	#else
 	//pico_code
-	stdio_init_all();
-	tusb_init();
+	// stdio_init_all();
+	// tusb_init();
 	spi_init(NRF_SPI_PORT, 10000000);
 	gpio_set_function(MISO_PIN, GPIO_FUNC_SPI);
 	gpio_set_function(SCK_PIN, GPIO_FUNC_SPI);
@@ -178,8 +175,6 @@ NRF24::NRF24()
 	disablePin(CSN_PIN);
 	// usleep(5);
 	sleep_us(5);
-	char cmd = ' ';
-
 
 	
 	WriteReg(SETUP_RETR, 0x00);	//Retransmision(5, 15)
@@ -351,7 +346,7 @@ void NRF24::TransmitData(uint8_t* data)
 		disablePin(CE_PIN);
 		WriteReg(CONFIG, ReadReg(CONFIG) - 1);
 		enablePin(CE_PIN);
-		printf("ENTER IN TRANSMIT MODE\n");
+		printf("ENTER IN TRANSMIT MODE");
 	}
 	uint8_t* txData = spiTx; 
 	*txData++ = W_TX_PAYLOAD;
@@ -387,7 +382,7 @@ void NRF24::TransmitData(uint8_t* data)
 	{
 		if(!(fifo&(1<<3)))
 		{
-			printf("It transmited data\n");
+			printf("It transmited data");
 			WriteReg(STATUS, 1 << MAX_RT | 1 << TX_DS);
 			SendCommand(NOP);
 			SendCommand(FLUSH_TX);
@@ -395,7 +390,7 @@ void NRF24::TransmitData(uint8_t* data)
 		}
 		else
 		{
-			std::cout << "The device isn't connected\n";
+			printf("The device isn't connected");
 			SendCommand(FLUSH_TX);
 			SendCommand(NOP);
 		}
@@ -454,7 +449,6 @@ uint8_t NRF24::IsDataAvailable(int pipeNr)
 
 bool NRF24::ReceiveData(char* data)
 {
-	uint8_t* currentData = (uint8_t*) data;
 	uint8_t* txData = spiTx;
 	uint8_t* rxData = spiRx;
 	int size = 32 + 1;
@@ -471,7 +465,7 @@ bool NRF24::ReceiveData(char* data)
 	//pico code
 	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, size);
 	#endif
-	char status = *rxData++;
+	rxData++;//status
 	memcpy(data, rxData, sizeof(char)*32);
 	printf("%32s\n", rxData);
 	enablePin(CSN_PIN);
