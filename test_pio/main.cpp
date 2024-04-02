@@ -32,12 +32,25 @@ int main()
       lenghtTransmission[4] = (length >> 8) & 0xFF;
       lenghtTransmission[5] =  length & 0xFF;
       nrf24.TransmitData(lenghtTransmission);
+      sleep_ms(20);
 
       for(int i = 0; i < length; i = i + 32)
       {
         // dataImg = dataImg + 32;
         // nrf24.TransmitData(dataTransmission);
-         memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * 32);
+        if(i + 32 < length)
+        {
+          memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * 32);
+          camLib.SerialUsb(dataToTransmit, 32);
+          dataImg = dataImg + 32;
+        }
+        else
+        {
+          memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * (length - i));
+          camLib.SerialUsb(dataToTransmit, length - i);
+          dataImg = dataImg + (length - i);
+        }
+
         //  for(int i = 0; i < 32; i++)
         //  {
         //     printf("Data to Transmit: %x", dataToTransmit[i]);
@@ -48,10 +61,10 @@ int main()
          }
 
         //  printf("Index: %d", i);
-         dataImg = dataImg + 32;
+        sleep_ms(20);
       }
       printf("%.4s\n",std::to_string(length).c_str());
-      camLib.SerialUsb(imageBuf, length);
+      // camLib.SerialUsb(imageBuf, length);
       camLib.FreeFifoCam(imageBuf);
     }
 
