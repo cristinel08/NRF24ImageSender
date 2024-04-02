@@ -1,7 +1,7 @@
 #include<RF24.h>
-#include<opencv4/opencv2/core.hpp>
-#include<opencv4/opencv2/imgcodecs.hpp>
-#include <opencv4/opencv2/highgui.hpp>
+#include <opencv2/opencv.hpp>            // C++
+#include <opencv2/core/version.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include<iostream>
 #include<time.h>
 #include<string>
@@ -24,10 +24,10 @@ int main()
 	// nrf24.TxMode(txAddress, 76);
 	// nrf24.OpenWritingPipe(txAddress);
 	int size = 0;
-	int numReceived{0};
+	// int numReceived{0};
 	int indexJpeg = 0;
 	int testSize = 0;
-	int indexImg = 0;
+	// int indexImg = 0;
 	while(1)
 	{
 		while(nrf24.IsDataAvailable(1))
@@ -69,14 +69,14 @@ int main()
 				cv::Mat img = cv::imdecode(jpegImg, cv::IMREAD_GRAYSCALE);
 				if(!img.empty())
 				{
-					// cv::imshow("Image test", img);
+					cv::imshow("Image test", img);
 					//cv::waitKey(1);
 					// cv::imwrite();
-					cv::imwrite("imgs/" + std::to_string(indexImg)
-								 +".jpg", img);
+					// cv::imwrite("imgs/" + std::to_string(indexImg)
+					// 			 +".jpg", img);
 					cv::waitKey(1);
-					std::cout << "Wrote image: " << indexImg;
-					indexImg++;
+					// std::cout << "Wrote image: " << indexImg;
+					// indexImg++;
 				}
 	
 				jpegImg.clear();
