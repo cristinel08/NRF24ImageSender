@@ -109,17 +109,54 @@ int main()
 	// nrf24.TxMode(txAddress, 76);
 	// nrf24.OpenWritingPipe(txAddress);
 	int numReceived{0};
+	int retrans{3};
+	bool isAvailable{false};
 	while(1)
 	{
-		while(nrf24.IsDataAvailable(1))
+		// while(nrf24.IsDataAvailable(1))
 		{
-			nrf24.ReceiveData(dataRx);
-			printf("While true loop %32s\n", dataRx);
+			// nrf24.ReceiveData(dataRx);
+			// printf("While true loop %32s\n", dataRx);
 			// printf("Outside loop data: %32s\n", dataRx);
-			printf("NumReceived: %d\n", ++numReceived);
+			nrf24.TransmitData(data);
+			// usleep(1000);
+			isAvailable = nrf24.IsDataAvailable(1);
+			// usleep(2500);
+			// nrf24.SendCommand(NOP);
+			while(!isAvailable && (retrans > 0))
+			{ 	
+				// usleep(500);
+				// isAvailable = nrf24.IsDataAvailable(1);
+				// if(isAvailable)
+				// {
+					// break;
+				// }
+				// nrf24.TransmitData(data);
+				isAvailable = nrf24.IsDataAvailable(1);
+				retrans--;
+				// usleep(1000);
+			
+			}
+			if(isAvailable)
+			{
+				nrf24.ReceiveData(dataRx);			
+				printf("%32s\n",dataRx);
+				printf("NumReceived: %d\n", ++numReceived);
+				// while (nrf24.IsDataAvailable(1))
+				// {
+					/* code */
+				// }
+				
+				isAvailable = false;
+			}
+			retrans = 10;
+	
 		}
 		// dataTransmited = !dataTransmited;
-		sleep(1);
+		// sleep(1);
+		usleep(500);
+		// sleep(2);
+
 	
 	}
 }
