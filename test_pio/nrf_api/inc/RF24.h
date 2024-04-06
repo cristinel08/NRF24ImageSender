@@ -3,10 +3,12 @@
 #ifndef JETSON_BOARD
 #include <jetgpio.h>
 #include <unistd.h>
+#define UINT8 char
 #else
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "tusb.h"
+#define UINT8 uint8_t
 #define LED_BOARD 16
 #endif
 #include <iostream>
@@ -21,13 +23,15 @@ class NRF24{
 		~NRF24();
 		void enablePin(int pin);
 		void disablePin(int pin);
-		void TxMode(char* address,char channel);
-		void TransmitData(uint8_t* data);
-		void RxMode(char* address,char data);
-		bool ReceiveData(char* data);
-		uint8_t IsDataAvailable(int);
-		void OpenWritingPipe(char* address);
-		void SendCommand(char cmd);
+		void TxMode(UINT8* address,UINT8 channel);
+		void Set2Rx();
+		void Set2Tx();
+		void TransmitData(UINT8* data);
+		void RxMode(UINT8* address,UINT8 data);
+		bool ReceiveData(UINT8* data);
+		UINT8 IsDataAvailable(int);
+		void OpenWritingPipe(UINT8* address);
+		void SendCommand(UINT8 cmd);
 
 	private:
 		//variable that checks the proper
@@ -36,15 +40,10 @@ class NRF24{
 		int init_;
 		int SPI_init_;
 		int verify_;
-		#ifndef JETSON_BOARD
-		char spiTx[33]; //32 bytes date + 1 command
-		char spiRx[33];	//32 bytes date + 1 command 
-		#else
-		uint8_t spiTx[33];
-		uint8_t spiRx[33];
-		#endif
-		void WriteRegMulti(char reg,char* data,int size);
-		void WriteReg(char reg,char data);
-		char ReadReg(char reg);
-		void ReadMulti(char reg,char* data,int size);
+		UINT8 spiTx[33]; //32 bytes date + 1 command
+		UINT8 spiRx[33];	//32 bytes date + 1 command 
+		void WriteRegMulti(UINT8 reg, UINT8* data, int size);
+		void WriteReg(UINT8 reg,UINT8 data);
+		UINT8 ReadReg(UINT8 reg);
+		void ReadMulti(UINT8 reg,UINT8* data,int size);
 };
