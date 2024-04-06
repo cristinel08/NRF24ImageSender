@@ -35,78 +35,52 @@ int main()
 				once = false;
 			}
 
-			// if(nrf24.IsDataAvailable(1))
+
+			// nrf24.Set2Tx();
+			// nrf24.TransmitData(dataTx);
+			// nrf24.Set2Rx();
+			// isDataAvailable = nrf24.IsDataAvailable(1);
+			// while(!isDataAvailable)
 			// {
-			// 	// printf("Data Available\n");
-			// 	while(nrf24.ReceiveData(data))
-			// 	{
-			// 		// printf("Data received while loop: %32s\n",data);
-			// 		// received = false;
-			// 	}
-			// 	nrf24.SendCommand(FLUSH_RX);
-			// 	// if(received)
-			// 	// {
-			// 	// 	printf("Data received outside while loop: %32s\n",data);
-			// 	// }
-			// 	// nrf24.TxMode(txAddress, 76);
-			// 	// received = true;
+			// 	isDataAvailable = nrf24.IsDataAvailable(1);
 			// }
-			// nrf24.TransmitData((UINT8*)dataTx);
-
-
-			// if(numTrans % 4 == 0)
+			// nrf24.ReceiveData(data);
+			// printf("NumTrans %d\n", ++numTrans);
+			// while(nrf24.IsDataAvailable(1))
 			// {
-				// while((!isDataAvailable))
-				// {
-					// sleep_ms(1);
-					nrf24.Set2Tx();
-					nrf24.TransmitData(dataTx);
-					nrf24.Set2Rx();
-					sleep_ms(1);
-					isDataAvailable = nrf24.IsDataAvailable(1);
-					while(!isDataAvailable)
-					{
-						nrf24.Set2Tx();
-						nrf24.TransmitData(ackTransmit);
-						nrf24.Set2Rx();
-						sleep_us(1500);
-						isDataAvailable = nrf24.IsDataAvailable(1);
-
-					}
-					// sleep_ms(1);
-					// retrans -= 1;
-					// sleep_ms(1);
-					// isDataAvailable = nrf24.IsDataAvailable(1);
-					// sleep_ms(5);
-				// }
-				// else
-				// {
-				// while(nrf24.IsDataAvailable(1))
-				// if(isDataAvailable)
-				// {
-				// nrf24.ReceiveData(data);
-				while(!isDataAvailable)
-				{
-					nrf24.Set2Tx();
-					nrf24.TransmitData((UINT8*)dataTx);
-					nrf24.Set2Rx();
-					isDataAvailable = nrf24.IsDataAvailable(1);
-				}
+			// 	nrf24.ReceiveData(data);
+			// }
+			// isDataAvailable = false;	
+			// nrf24.TransmitData(dataTx);
+			while(nrf24.IsDataAvailable(1))
+			{
 				nrf24.ReceiveData(data);
-				printf("NumTrans %d\n", ++numTrans);
-				while(nrf24.IsDataAvailable(1))
+				// sleep_ms(3);
+				// sleep_ms(2);
+				while(retrans)
 				{
-					nrf24.ReceiveData(data);
+					nrf24.TransmitData(dataTx);
+					// sleep_ms(1);
+					retrans--;
 				}
-				isDataAvailable = false;
+				printf((const char*)data);
+				printf("\n");
+				printf("Num transaction:%d \n", ++numTrans);
 
-				// }
-				// while(nrf24.IsDataAvailable(1))
-				// {
+			}
+			retrans = 2;
+			// while(retrans > 0)
+			// {
+				
+				// retrans--;
+				// sleep_ms(1);
 			// }
-
-			// }
-	
+			// retrans = 3;
+			// nrf24.SendCommand(FLUSH_RX);
+		}
+		else
+		{
+			numTrans = 0;
 		}
 		// sleep_ms(1000);
 

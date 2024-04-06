@@ -21,17 +21,17 @@ class NRF24{
 	public:
 		NRF24();
 		~NRF24();
-		void enablePin(int pin);
-		void disablePin(int pin);
-		void TxMode(UINT8* address,UINT8 channel);
+		void enablePin(const uint8_t& pin);
+		void disablePin(const uint8_t& pin);
+		void TxMode(UINT8* address, const UINT8& channel);
 		void Set2Rx();
 		void Set2Tx();
 		void TransmitData(UINT8* data);
-		void RxMode(UINT8* address,UINT8 data);
+		void RxMode(UINT8* address, const UINT8& data);
 		bool ReceiveData(UINT8* data);
-		UINT8 IsDataAvailable(int);
+		UINT8 IsDataAvailable(const uint8_t&);
 		void OpenWritingPipe(UINT8* address);
-		void SendCommand(UINT8 cmd);
+		void SendCommand(const UINT8& cmd);
 
 	private:
 		//variable that checks the proper
@@ -40,10 +40,12 @@ class NRF24{
 		int init_;
 		int SPI_init_;
 		int verify_;
+		UINT8 status;
+		uint8_t lenData;
 		UINT8 spiTx[33]; //32 bytes date + 1 command
 		UINT8 spiRx[33];	//32 bytes date + 1 command 
-		void WriteRegMulti(UINT8 reg, UINT8* data, int size);
-		void WriteReg(UINT8 reg,UINT8 data);
-		UINT8 ReadReg(UINT8 reg);
-		void ReadMulti(UINT8 reg,UINT8* data,int size);
+		void WriteRegMulti(const UINT8& reg, UINT8* data, int size);
+		void WriteReg(const UINT8& reg, const UINT8& data);
+		UINT8 ReadReg(const UINT8& reg);
+		void ReadMulti(const UINT8& reg, UINT8* data, int size);
 };
