@@ -32,7 +32,7 @@ int main()
       lenghtTransmission[4] = (length >> 8) & 0xFF;
       lenghtTransmission[5] =  length & 0xFF;
       nrf24.TransmitData(lenghtTransmission);
-      sleep_ms(20);
+      sleep_ms(3);
 
       for(int i = 0; i < length; i = i + 32)
       {
@@ -61,7 +61,7 @@ int main()
          }
 
         //  printf("Index: %d", i);
-        sleep_ms(20);
+        sleep_ms(3);
       }
       printf("%.4s\n",std::to_string(length).c_str());
       // camLib.SerialUsb(imageBuf, length);
