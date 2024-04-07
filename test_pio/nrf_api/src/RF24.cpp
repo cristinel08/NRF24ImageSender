@@ -391,10 +391,10 @@ void NRF24::TransmitData(uint8_t* data)
 			{
 				WriteReg(STATUS, 1 << TX_DS);
 			}
-			else
-			{
-				// SendCommand(REUSE_TX_PL);
-			}
+			// else
+			// {
+			// 	// SendCommand(REUSE_TX_PL);
+			// }
 			// if(status & (1 << RX_DR))
 			// {
 			// 	WriteReg(STATUS, 1 << RX_DR);

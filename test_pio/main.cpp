@@ -14,8 +14,8 @@ int main()
   nrf24.OpenWritingPipe(txAddress);
   uint8_t lenghtTransmission[32]{};
   uint8_t* dataToTransmit = new uint8_t[32]{};
-  uint8_t ackData[32] = {"..............................."};
-  bool isAvailable{false};
+  // uint8_t ackData[32] = {"..............................."};
+  // bool isAvailable{false};
   for(int i = 0; i < 32; i++)
   {
     lenghtTransmission[i] = 0;
@@ -23,9 +23,9 @@ int main()
   lenghtTransmission[0] = 0x0A;
   lenghtTransmission[1] = 0x0D;
   uint8_t* imageBuf{nullptr};
-  auto time = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<float> duration{};
-  std::chrono::microseconds us;
+  // auto time = std::chrono::high_resolution_clock::now();
+  // std::chrono::duration<float> duration{};
+  // std::chrono::microseconds us;
   int length{0};
   while(1)
   {
@@ -64,16 +64,16 @@ int main()
          if(dataToTransmit != nullptr)
          {
             nrf24.TransmitData(dataToTransmit);
-            time = std::chrono::high_resolution_clock::now();
-            while(!isAvailable && (us.count() < 1000))
-            {
-              // nrf24.TransmitData(ackData);
-              // isAvailable = nrf24.IsDataAvailable(1);
-              duration = std::chrono::high_resolution_clock::now() - time;
-              us = std::chrono::duration_cast<std::chrono::microseconds>(duration);
-              // sleep_ms(1);
-            }
-            us = us.zero();
+            // time = std::chrono::high_resolution_clock::now();
+            // while(!isAvailable && (us.count() < 1000))
+            // {
+            //   // nrf24.TransmitData(ackData);
+            //   // isAvailable = nrf24.IsDataAvailable(1);
+            //   duration = std::chrono::high_resolution_clock::now() - time;
+            //   us = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+            //   // sleep_ms(1);
+            // }
+            // us = us.zero();
             // if(isAvailable)
             // {
               if(i + 32 < length)
@@ -85,16 +85,16 @@ int main()
                 dataImg = dataImg + (length - i);
               }
               i = i + 32;
-              isAvailable = false;
+              // isAvailable = false;
             // }
             // nrf24.ReceiveData(dataRx);
-            sleep_ms(2);
+            sleep_ms(1);
          }
 
         //  printf("Index: %d", i);
     
       }
-      printf("%.4s\n",std::to_string(length).c_str());
+      // printf("%.4s\n",std::to_string(length).c_str());
       // camLib.SerialUsb(imageBuf, length);
       camLib.FreeFifoCam(imageBuf);
       // sleep_ms(10);
