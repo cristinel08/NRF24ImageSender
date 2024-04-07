@@ -26,13 +26,15 @@ int main()
 	int size = 0;
 	// int numReceived{0};
 	int indexJpeg = 0;
-	int testSize = 0;
+	uint8_t copySize {32};
+	cv::Mat img{};
 	// int indexImg = 0;
 	while(1)
 	{
-		while(nrf24.IsDataAvailable(1))
+		
+		if(nrf24.IsDataAvailable(1))
 		{
-			nrf24.ReceiveData(dataRx);
+			nrf24.ReceiveData(dataRx, copySize);
 			if(dataRx[0] == 0x0A && dataRx[1] == 0x0D)
 			{
 				size = (int)((unsigned char)dataRx[2] << 24 | 
@@ -45,28 +47,32 @@ int main()
 					jpegImg.clear();
 				}
 				jpegImg = std::vector<char>(size);
+				copySize = 32;
 				populateJpeg = jpegImg.data();
 				while(size > 0)
 				{
-					while(nrf24.IsDataAvailable(1))
+					if(nrf24.IsDataAvailable(1))
 					{	
 						size = size - 32;
-						nrf24.ReceiveData(dataRx);
+						
 						if(size > 0)
 						{
-							memcpy(populateJpeg, dataRx, sizeof(char)*32);
+							// memcpy(populateJpeg, dataRx, sizeof(char)*32);
+							nrf24.ReceiveData(populateJpeg, copySize);
+							populateJpeg = populateJpeg + 32;
 						}
 						else
 						{
-							memcpy(populateJpeg, dataRx, sizeof(char) * (size + 32));
+							nrf24.ReceiveData(populateJpeg, size + 32);
+							populateJpeg = populateJpeg + (size + 32);
+							// memcpy(populateJpeg, dataRx, sizeof(char) * (size + 32));
 						}
 						
-						populateJpeg = populateJpeg + 32;
-						testSize++;
+						// populateJpeg = populateJpeg + 32;
 					}					
 					// sleep(1);
 				}
-				cv::Mat img = cv::imdecode(jpegImg, cv::IMREAD_GRAYSCALE);
+				img = cv::imdecode(jpegImg, cv::IMREAD_COLOR);
 				if(!img.empty())
 				{
 					cv::imshow("Image test", img);
@@ -92,6 +98,7 @@ int main()
 
 		}
 		// dataTransmited = !dataTransmited;	
+		// usleep(1);
 	}
 }
 
