@@ -92,11 +92,11 @@ void CameraLib::StartCapture()
     //Change to JPEG capture mode and initialize the OV5642 module
     myCAM.set_format(JPEG);
     myCAM.InitCAM();
-    myCAM.OV2640_set_JPEG_size(OV2640_320x240);
-    sleep_ms(1000);
+    myCAM.OV2640_set_JPEG_size(OV2640_176x144);
+    // sleep_ms(1000);
     myCAM.clear_fifo_flag();
-
-    myCAM.OV2640_set_Special_effects(BW);
+    myCAM.OV2640_set_Special_effects(Normal);
+    // myCAM.OV2640_set_Special_effects(BW);
     // myCAM.OV2640_set_Contrast(Contrast2);
     // myCAM.OV2640_set_Light_Mode(Sunny);
 

@@ -19,13 +19,13 @@ class NRF24{
 	public:
 		NRF24();
 		~NRF24();
-		void enablePin(int pin);
-		void disablePin(int pin);
-		void TxMode(char* address,char channel);
+		void enablePin(const uint8_t& pin);
+		void disablePin(const uint8_t& pin);
+		void TxMode(char* address, const char& channel);
 		void TransmitData(uint8_t* data);
-		void RxMode(char* address,char data);
+		void RxMode(char* address, const char& data);
 		bool ReceiveData(char* data);
-		uint8_t IsDataAvailable(int);
+		uint8_t IsDataAvailable(const uint8_t&);
 		void OpenWritingPipe(char* address);
 		void SendCommand(char cmd);
 
@@ -43,8 +43,13 @@ class NRF24{
 		uint8_t spiTx[33];
 		uint8_t spiRx[33];
 		#endif
-		void WriteRegMulti(char reg,char* data,int size);
-		void WriteReg(char reg,char data);
-		char ReadReg(char reg);
-		void ReadMulti(char reg,char* data,int size);
+		char fifo{};
+		char status{};
+		char config{};
+		uint8_t size{};
+		char en_rxaddr{};
+		void WriteRegMulti(const char& reg,char* data, uint8_t size);
+		void WriteReg(const char& reg, const char& data);
+		char ReadReg(const char& reg);
+		void ReadMulti(const char& reg,char* data, uint8_t size);
 };
