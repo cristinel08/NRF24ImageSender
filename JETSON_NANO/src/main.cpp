@@ -1,163 +1,44 @@
 #include<RF24.h>
-#include<iostream>
-#include<time.h>
-#include<string>
-#include<ctime>
-
-// char ReadReg (char reg, int SPI_init_);
-// void WriteReg (char reg, char data, int SPI_init_);
-// //using namespace GPIO; // optional
-// int main()
-// {
-//     int init_ = gpioInitialise();
-//     if(init_ < 0)
-// 	{
-// 		std::cout << "Problema initializare gpio cu " << init_ << "\n";
-// 		exit(init_);
-//         return -1;
-// 	}
-// 	int verify_ = gpioSetMode(CE_PIN, JET_OUTPUT);
-// 	if(verify_ < 0)
-// 	{
-// 		std::cout << "Nu a mers setarea pinului CE, codul: " << verify_ << "\n";
-// 		exit(init_);
-//         return -2;
-// 	}
-// 	verify_ = gpioSetMode(CSN_PIN, JET_OUTPUT);
-//     if(verify_ < 0)
-// 	{
-// 		std::cout << "Nu a mers setarea pinului CSN, codul: " << verify_ << "\n";
-// 		exit(init_);
-// 	}
-// 	else
-// 	{
-// 		std::cout << "A mers setarea pinului CSN. Codul: " << verify_ << "\n";
-// 	}
-
-// 	int SPI_init_ = spiOpen(0, 10000000, 0, 5, 8, 0, 0);
-
-// 	if (SPI_init_ < 0)
-// 	{
-// 			/* Port SPI2 opening failed */
-// 		printf("Port SPI1 opening failed. Error code:  %d\n", SPI_init_);
-// 		exit(init_);
-//         return -3;
-// 	}
-// 	usleep(5);
-// 	// WriteReg(SETUP_RETR, 5 << ARD | 15, SPI_init_);
-//     WriteReg(CONFIG, 0x02, SPI_init_);
-// 	char readChannel = 0x0F;
-// 	// WriteReg(RF_SETUP, readChannel, SPI_init_);
-// 	readChannel = ReadReg(CONFIG, SPI_init_);
-//     return 0;
-// }
-
-
-// void WriteReg (char reg, char data, int SPI_init_)
-// {
-// 	int status{};
-// 	char buf[2]{};
-// 	char spiRx[32]{};
-// 	buf[0] = W_REGISTER | reg;//|1<<5;
-// 	buf[1] = data;
-// 	// char cmd = W_REGISTER;
-	
-// 	//pentru a selecta
-// 	int verify_ = gpioWrite(CSN_PIN,0);
-// 	verify_ = gpioWrite(CE_PIN, 1);
-// 	// verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
-// 	// usleep(10);
-// 	if(verify_)
-// 	{
-// 		verify_ = spiXfer(SPI_init_, buf, spiRx, 2);
-// 		// usleep(10);
-// 	}
-// 	status = (int)spiRx[0];
-// 	gpioWrite(CSN_PIN,1);
-// }
-
-// char ReadReg (char reg, int SPI_init_)
-// {
-// 	char data='0';
-// 	int status{};
-// 	char spiRx[32]{};
-// 	char cmd[2]{};
-// 	cmd[0] = R_REGISTER | reg;
-// 	cmd[1] = NOP;
-// 	//pentru a selecta dispozitivul
-// 	gpioWrite(CSN_PIN,0);
-// 	int verify_ = spiXfer(SPI_init_, cmd, spiRx, 2);
-// 	status = (int)spiRx[0];
-// 	data = spiRx[1];
-// 	gpioWrite(CSN_PIN,1);
-// 	return data;
-// }
+// #include<opencv2/core.hpp>
 
 int main()
 {
+	// cv::Mat img{}
 	char dataTx[32]{"Buna Cristi am trimis de pe Jet"};
 	char dataRx[32]{};
 	char txAddress[]{"1Node"};
 	char rxAddress[]{"2Node"};
 	char data[32]{"a,b,c,d,e,f,g,h,i,j,k,l,m,n,p,q"};
-
+	bool anotherValue{false};
+	uint8_t received{0};
 	NRF24 nrf24 = NRF24();
 	
 	nrf24.RxMode(rxAddress, 76);
-	bool dataTransmited{true};
-	nrf24.OpenWritingPipe(txAddress);
 	// nrf24.TxMode(txAddress, 76);
-	// nrf24.OpenWritingPipe(txAddress);
-	int numReceived{0};
-	int retrans{3};
-	bool isAvailable{false};
+	nrf24.OpenWritingPipe(txAddress);
 	while(1)
 	{
-		// while(nrf24.IsDataAvailable(1))
-		{
-			// nrf24.ReceiveData(dataRx);
-			// printf("While true loop %32s\n", dataRx);
-			// printf("Outside loop data: %32s\n", dataRx);
-			nrf24.TransmitData(data);
-			// usleep(1000);
-			isAvailable = nrf24.IsDataAvailable(1);
-			// usleep(2500);
-			// nrf24.SendCommand(NOP);
-			while(!isAvailable && (retrans > 0))
-			{ 	
-				// usleep(500);
-				// isAvailable = nrf24.IsDataAvailable(1);
-				// if(isAvailable)
-				// {
-					// break;
-				// }
-				// nrf24.TransmitData(data);
-				isAvailable = nrf24.IsDataAvailable(1);
-				retrans--;
-				// usleep(1000);
-			
-			}
-			if(isAvailable)
-			{
-				nrf24.ReceiveData(dataRx);			
-				printf("%32s\n",dataRx);
-				printf("NumReceived: %d\n", ++numReceived);
-				// while (nrf24.IsDataAvailable(1))
-				// {
-					/* code */
-				// }
-				
-				isAvailable = false;
-			}
-			retrans = 10;
-	
-		}
-		// dataTransmited = !dataTransmited;
-		// sleep(1);
-		usleep(500);
-		// sleep(2);
 
-	
+		while(nrf24.IsDataAvailable(1))
+		{ 	
+			// usleep(10);
+			// usleep(500);
+			nrf24.TransmitData(dataTx);	
+			nrf24.ReceiveData(dataRx);
+			if (dataRx[0] != anotherValue)
+			{
+				// usleep(900);
+				// usleep(1000);
+				anotherValue = !anotherValue;
+				// printf("%32s\n",dataRx);
+				printf("Received: %d\n", received++);
+				if(received >= 128)
+				{
+					break;
+				}
+			}
+		}
+		// sleep(1);
 	}
 }
 

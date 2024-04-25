@@ -15,6 +15,8 @@ class NRF24{
 		void TxMode(char* address, const char& channel);
 		void TransmitData(char* data);
 		void RxMode(char* address, const char& data);
+		void Set2Tx();
+		void Set2Rx();
 		bool ReceiveData(char* data);
 		uint8_t IsDataAvailable(const uint8_t&);
 		void OpenWritingPipe(char* address);

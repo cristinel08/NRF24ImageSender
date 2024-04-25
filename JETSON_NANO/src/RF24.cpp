@@ -143,7 +143,7 @@ NRF24::NRF24()
 	usleep(5);
 
 	
-	WriteReg(SETUP_RETR, 0xff);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x00);	//Retransmision(5, 15)
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
@@ -161,7 +161,7 @@ NRF24::NRF24()
 
 	WriteReg(RF_CH, 0x4c);	    //Channel will be setup in  during TX or RX
 
-	WriteReg(RF_SETUP, 0x06);	//Power 18dB, data rate = 1Mbps
+	WriteReg(RF_SETUP, 0x00);	//Power 0dB, data rate = 1Mbps
 	
 	WriteReg(STATUS, 0x70);
 
@@ -193,7 +193,7 @@ void NRF24::disablePin(const uint8_t& pin)
 }
 void NRF24::OpenWritingPipe(char* address)
 {
-	WriteRegMulti(RX_ADDR_P0, address, 5);
+	// WriteRegMulti(RX_ADDR_P0, address, 5);
 	WriteRegMulti(TX_ADDR, address, 5);
 }
 void NRF24::TxMode(char* address, const char& channel)
@@ -228,14 +228,8 @@ void NRF24::SendCommand(const char& cmd)
 
 void NRF24::TransmitData(char* data)
 {
-	//char cmd
-	if(ReadReg(CONFIG) % 2)
-	{
-		disablePin(CE_PIN);
-		WriteReg(CONFIG, ReadReg(CONFIG) - 1);
-		enablePin(CE_PIN);
-		usleep(140);
-	}
+
+	Set2Tx();
 	char* txData = spiTx;
 	char* rxData = spiRx;
 	const char* current = data;
@@ -246,61 +240,35 @@ void NRF24::TransmitData(char* data)
 		*txData++ = *current++;
 	}
 	size = 33;
-
 	disablePin(CSN_PIN);
 	if(verify_)
 	{	
-		verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
-		// SendCommand(NOP);
-		// usleep(1000);
+		verify_ = spiXfer(SPI_init_, spiTx, spiRx, sizeof(char) * size);
 	}
+	// usleep(1000);
 	enablePin(CSN_PIN);
-	// usleep(3000);
-	usleep(1000);
-	status = ReadReg(FIFO_STATUS);
-	// if(status & (1 << MAX_RT)) //|| fifo & (1 << TX_DS))
-	if(!(status & (1 << 4)))
+
+	status = ReadReg(STATUS);
+	if (status & (1 << MAX_RT))
 	{
-		if(!(status&(1<<3)))
-		{
-
-			status = ReadReg(STATUS);
-			while (!(status & (1 << MAX_RT)))
-			{
-				// spiXfer(SPI_init_, spiTx, spiRx, size);
-				status = ReadReg(STATUS);
-			}
-			WriteReg(STATUS, 1 << MAX_RT); //clear bit MAX_RT
-			SendCommand(FLUSH_TX);
-			printf("It transmited data %32s\n", data);
-			if (status & (1 << TX_DS))
-			{
-				WriteReg(STATUS, 1 << TX_DS);
-			}
-			
-			// SendCommand(NOP);
-
-		}
+		WriteReg(STATUS, 1 << MAX_RT); //clear bit MAX_RT
 	}
-	// if (status & (1 << TX_DS))
-	// {
-	// 	WriteReg(STATUS, 1 << TX_DS);
-	// }
-	
+	if (status & (1 << TX_DS))
+	{
+		WriteReg(STATUS, 1 << TX_DS);
+	}
 
+	// printf("It transmited data %32s\n", data);
 }
 
 
 void NRF24::RxMode(char* address, const char& channel)
 {
 	disablePin(CE_PIN);
-	//enablePin(CSN_PIN);
-
 	//select the channel
 	WriteReg(RF_CH, channel);
 	//select data pipe 1
 
-    //write the tx address
 	WriteRegMulti(RX_ADDR_P1, address, 5);
 
 	//setting the payload to maximum 32 bits
@@ -308,29 +276,45 @@ void NRF24::RxMode(char* address, const char& channel)
 
 	//power up the device in RX mode
 	status = ReadReg(CONFIG);
-	status = status | (1 << 1) | (1 << 0);
+	status = status | (1 << PWR_UP) | (1 << 0);
 	WriteReg(CONFIG, status);
 	WriteReg(STATUS, 0x70);
 	status = ReadReg(EN_RXADDR);
 
 	WriteReg(EN_RXADDR, status | (1 << 1)); 
-	// WriteReg(CONFIG, 0x0e);
 	enablePin(CE_PIN);
-	//disablePin(CSN_PIN);
-
 }	
+
+void NRF24::Set2Rx()
+{
+	status = ReadReg(CONFIG);
+	if (status % 2 == 0)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, status + 1);
+		usleep(140);
+		enablePin(CE_PIN);
+	}
+}
+
+void NRF24::Set2Tx()
+{
+	status = ReadReg(CONFIG);
+	if (status % 2)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, status - 1);
+		usleep(140);
+		enablePin(CE_PIN);
+		
+	}
+}
 
 uint8_t NRF24::IsDataAvailable(const uint8_t& pipeNr)
 {
-	if(ReadReg(CONFIG) % 2 == 0)
-	{
-		disablePin(CE_PIN);
-		WriteReg(CONFIG, ReadReg(CONFIG) + 1);
-		enablePin(CE_PIN);
-		usleep(130);
-	}
+	Set2Rx();
+
 	status = ReadReg(STATUS);
-	// SendCommand(NOP);
 	if ((status & (1 << 6)) && 
 	    (status & (pipeNr << 1)))
 	{
@@ -352,11 +336,12 @@ bool NRF24::ReceiveData(char* data)
 		*txData++ = NOP;
 	}
 	size = 32 + 1;
-	gpioWrite(CSN_PIN, 0);
+	disablePin(CSN_PIN);
 	verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
+	enablePin(CSN_PIN);
 	status = *rxData++;
 	memcpy(data, rxData,sizeof(char)*32);
-	enablePin(CSN_PIN);
+	
 
 	status = ReadReg(FIFO_STATUS);
 	// SendCommand(NOP);

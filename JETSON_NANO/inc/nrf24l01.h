@@ -56,5 +56,8 @@
 #define CE_PIN 		15
 #define CSN_PIN 	24
 
+#define RX_DWN      0xFD
+#define TX_DWN      0xFC
+
 
 #endif /* INC_RF24_H_ */
