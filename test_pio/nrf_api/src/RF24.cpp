@@ -345,16 +345,6 @@ void NRF24::TransmitData(UINT8* data)
 	UINT8 size = 33;
 	memcpy(txData, data, sizeof(UINT8) * 32);
 	size = 33;
-	status = ReadReg(STATUS);
-	// SendCommand(NOP);
-	if(status & (1 << MAX_RT))
-	{
-		WriteReg(STATUS, 1 << MAX_RT);
-	}
-	if (status & (1 << TX_DS))
-	{
-		WriteReg(STATUS, 1 << TX_DS);
-	}
 	disablePin(CSN_PIN);
 	// verify_ = spiXfer(SPI_init_, (const UINT8&*)W_TX_PAYLOAD, nullptr, 1);
 	#ifndef JETSON_BOARD
@@ -368,7 +358,7 @@ void NRF24::TransmitData(UINT8* data)
 	//spi_write_blocking(NRF_SPI_PORT, (const UINT8*)data, 32);
 	#endif
 	enablePin(CSN_PIN);
-	sleep_us(1500);
+	sleep_ms(1);
 	status = ReadReg(STATUS);
 	// SendCommand(NOP);
 	if(status & (1 << MAX_RT))
@@ -379,7 +369,6 @@ void NRF24::TransmitData(UINT8* data)
 	{
 		WriteReg(STATUS, 1 << TX_DS);
 	}
-	printf("It transmited data\n");
 }
 
 

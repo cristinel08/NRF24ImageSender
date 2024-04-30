@@ -15,6 +15,7 @@ int main()
 	UINT8 txAddress[6]		{"2Node"};
 	UINT8 rxAddress[6] 		{"1Node"};
 	UINT8 data[32] 		 	{};
+	uint8_t retransmit		{1};
 	bool once 				{true};
 	bool received			{false};
 	uint8_t numTrasmission 	{0};
@@ -32,7 +33,7 @@ int main()
 		received  = !received;
 		dataTx[0] = received;
 		nrf24.TransmitData(dataTx);
-		sleep_us(500);
+		sleep_us(200);
 		nrf24.Set2Rx();
 		sleep_us(2000);
 		printf("Transmited %d\n", numTrasmission++);
@@ -40,14 +41,16 @@ int main()
 		{
 			break;
 		}
-		while(nrf24.IsDataAvailable(1) == 0)
+		while(nrf24.IsDataAvailable(1) == 0 && retransmit)
 		{
-			nrf24.Set2Tx();
-			nrf24.TransmitData(dataTx);
-			sleep_us(500);
-			nrf24.Set2Rx();
-			sleep_us(2000);
+			// nrf24.Set2Tx();
+			// nrf24.TransmitData(dataTx);
+			// sleep_us(200);
+			// retransmit--;
+			// nrf24.Set2Rx();
+			// sleep_us(2000);
 		}
+		retransmit = 1;
 		nrf24.ReceiveData(data);
 		printf("%32s\n", data);
 		
