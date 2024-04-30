@@ -23,6 +23,9 @@ int main()
 		{ 	
 			// usleep(10);
 			// usleep(500);
+			usleep(500);
+			//varianta ce a mers mai rpd
+			// usleep(900);
 			nrf24.TransmitData(dataTx);	
 			nrf24.ReceiveData(dataRx);
 			if (dataRx[0] != anotherValue)
@@ -31,9 +34,10 @@ int main()
 				// usleep(1000);
 				anotherValue = !anotherValue;
 				// printf("%32s\n",dataRx);
-				printf("Received: %d\n", received++);
+				received++;
 				if(received >= 128)
 				{
+					printf("Received: %d\n", received++);
 					break;
 				}
 			}
