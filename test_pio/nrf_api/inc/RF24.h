@@ -7,7 +7,6 @@
 #else
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
-#include "tusb.h"
 #define UINT8 uint8_t
 #define LED_BOARD 16
 #endif
@@ -34,18 +33,19 @@ class NRF24{
 		void SendCommand(const UINT8& cmd);
 
 	private:
-		//variable that checks the proper
-		//use for functions in the jetson
-		//lib
-		int init_;
-		int SPI_init_;
-		int verify_;
-		UINT8 status;
-		uint8_t lenData;
-		UINT8 spiTx[33]; //32 bytes date + 1 command
-		UINT8 spiRx[33];	//32 bytes date + 1 command 
 		void WriteRegMulti(const UINT8& reg, UINT8* data, int size);
 		void WriteReg(const UINT8& reg, const UINT8& data);
 		UINT8 ReadReg(const UINT8& reg);
 		void ReadMulti(const UINT8& reg, UINT8* data, int size);
+		#ifndef JETSON_BOARD
+		int init_;
+		int SPI_init_;
+		int verify_;
+		#endif
+		UINT8 configReg{};
+		UINT8 channel{};
+		UINT8 status;
+		uint8_t lenData;
+		UINT8 spiTx[33]; //32 bytes date + 1 command
+		UINT8 spiRx[33];	//32 bytes date + 1 command 
 };

@@ -65,5 +65,8 @@
 #define CSN_PIN       8
 #endif
 
+#define RX_DWN        0xFD
+#define TX_DWN        0xFC
+
 
 #endif /* INC_RF24_H_ */
