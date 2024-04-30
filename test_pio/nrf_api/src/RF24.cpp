@@ -367,8 +367,18 @@ void NRF24::TransmitData(UINT8* data)
 	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, size);
 	//spi_write_blocking(NRF_SPI_PORT, (const UINT8*)data, 32);
 	#endif
-	sleep_us(1500);
 	enablePin(CSN_PIN);
+	sleep_us(1500);
+	status = ReadReg(STATUS);
+	// SendCommand(NOP);
+	if(status & (1 << MAX_RT))
+	{
+		WriteReg(STATUS, 1 << MAX_RT);
+	}
+	if (status & (1 << TX_DS))
+	{
+		WriteReg(STATUS, 1 << TX_DS);
+	}
 	printf("It transmited data\n");
 }
 
@@ -406,9 +416,7 @@ void NRF24::Set2Rx()
 	if(status % 2 == 0)
 	{
 		disablePin(CE_PIN);
-		WriteReg(CONFIG, status & 0xFD);
-		sleep_us(140);
-		WriteReg(CONFIG, (ReadReg(CONFIG) + 1) | (1 << PWR_UP));
+		WriteReg(CONFIG, status | (1 << 0));
 		sleep_us(140);
 		enablePin(CE_PIN);
 
@@ -421,9 +429,7 @@ void NRF24::Set2Tx()
 	if(status % 2)
 	{
 		disablePin(CE_PIN);
-		WriteReg(CONFIG, status & 0xFD);
-		sleep_us(140);
-		WriteReg(CONFIG, (ReadReg(CONFIG) - 1) | (1 << PWR_UP));
+		WriteReg(CONFIG, status & ~(1 << 0));
 		sleep_us(140);
 		enablePin(CE_PIN);
 
