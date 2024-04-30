@@ -41,16 +41,18 @@ int main()
 			nrf24.Set2Tx();
 			nrf24.TransmitData(dataTx);
 			nrf24.Set2Rx();
-			sleep_us(2500);
+			sleep_us(1000);
+			//varianta ce a mers:
+			// sleep_us(2100);
 		}
-		printf("Transmited %d\n", numTrasmission++);
-		retransmit = 1;
+		numTrasmission++;
 		nrf24.ReceiveData(data);
-		printf("%32s\n", data);
+		// printf("%32s\n", data);
 		if(numTrasmission >= 128)
 		{
 			break;
 		}
 	}
+		printf("Transmited %d\n", numTrasmission);
 }
 
