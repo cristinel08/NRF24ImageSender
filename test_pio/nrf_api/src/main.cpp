@@ -32,28 +32,25 @@ int main()
 		}
 		received  = !received;
 		dataTx[0] = received;
-		nrf24.TransmitData(dataTx);
-		sleep_us(200);
-		nrf24.Set2Rx();
-		sleep_us(2000);
+		// nrf24.TransmitData(dataTx);
+		// sleep_us(200);
+		// nrf24.Set2Rx();
+		// sleep_us(2000);
+		while(nrf24.IsDataAvailable(1) == 0 )
+		{
+			nrf24.Set2Tx();
+			nrf24.TransmitData(dataTx);
+			nrf24.Set2Rx();
+			sleep_us(2500);
+		}
 		printf("Transmited %d\n", numTrasmission++);
+		retransmit = 1;
+		nrf24.ReceiveData(data);
+		printf("%32s\n", data);
 		if(numTrasmission >= 128)
 		{
 			break;
 		}
-		while(nrf24.IsDataAvailable(1) == 0 && retransmit)
-		{
-			// nrf24.Set2Tx();
-			// nrf24.TransmitData(dataTx);
-			// sleep_us(200);
-			// retransmit--;
-			// nrf24.Set2Rx();
-			// sleep_us(2000);
-		}
-		retransmit = 1;
-		nrf24.ReceiveData(data);
-		printf("%32s\n", data);
-		
 	}
 }
 
