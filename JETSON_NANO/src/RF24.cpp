@@ -123,7 +123,7 @@ NRF24::NRF24()
 		std::cout << "A mers setarea pinului CSN. Codul: " << verify_ << "\n";
 	}
 
-	SPI_init_ = spiOpen(0, 10'000'000, 0, 1, 8, 0, 0);
+	SPI_init_ = spiOpen(0, 1'000'000, 0, 1, 8, 0, 0);
 
 	if (SPI_init_ < 0)
 	{
@@ -243,20 +243,27 @@ void NRF24::TransmitData(char* data)
 	disablePin(CSN_PIN);
 	if(verify_)
 	{	
+		// std::this_thread::sleep(std::chrono::milis)
+		// std::this_thread::sleep_for(std::chrono::microseconds(1000));
 		verify_ = spiXfer(SPI_init_, spiTx, spiRx, sizeof(char) * size);
 	}
 	// usleep(1000);
 	enablePin(CSN_PIN);
 
-	status = ReadReg(STATUS);
-	if (status & (1 << MAX_RT))
-	{
-		WriteReg(STATUS, 1 << MAX_RT); //clear bit MAX_RT
-	}
-	if (status & (1 << TX_DS))
-	{
-		WriteReg(STATUS, 1 << TX_DS);
-	}
+	// status = ReadReg(FIFO_STATUS);
+	// if(!(status & 1 << 4))
+	// {
+		status = ReadReg(STATUS);
+		if (status & (1 << MAX_RT))
+		{
+			WriteReg(STATUS, 1 << MAX_RT); //clear bit MAX_RT
+		}
+		if (status & (1 << TX_DS))
+		{
+			WriteReg(STATUS, 1 << TX_DS);
+		}
+	// }
+
 
 	// printf("It transmited data %32s\n", data);
 }
@@ -291,8 +298,8 @@ void NRF24::Set2Rx()
 	if (status % 2 == 0)
 	{
 		disablePin(CE_PIN);
-		WriteReg(CONFIG, status + 1);
-		usleep(140);
+		WriteReg(CONFIG, status | (1 << 0));
+		usleep(130);
 		enablePin(CE_PIN);
 	}
 }
@@ -303,7 +310,7 @@ void NRF24::Set2Tx()
 	if (status % 2)
 	{
 		disablePin(CE_PIN);
-		WriteReg(CONFIG, status - 1);
+		WriteReg(CONFIG, status & ~(1 << 0));
 		usleep(140);
 		enablePin(CE_PIN);
 		
@@ -315,7 +322,7 @@ uint8_t NRF24::IsDataAvailable(const uint8_t& pipeNr)
 	Set2Rx();
 
 	status = ReadReg(STATUS);
-	if ((status & (1 << 6)) && 
+	if ((status & (1 << RX_DR)) && 
 	    (status & (pipeNr << 1)))
 	{
 		WriteReg(STATUS, (1 << RX_DR));

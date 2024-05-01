@@ -3,7 +3,9 @@
 #include<string.h>
 #include "nrf24l01.h"
 #include <unistd.h>
-#include<memory>
+#include <thread>
+#include <chrono>
+#include <memory>
 #pragma once
 
 class NRF24{
