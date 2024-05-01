@@ -1,6 +1,6 @@
-#define JETSON_BOARD
+#define PICO
 
-#ifndef JETSON_BOARD
+#ifndef PICO
 #include <jetgpio.h>
 #include <unistd.h>
 #define UINT8 char
@@ -37,7 +37,7 @@ class NRF24{
 		void WriteReg(const UINT8& reg, const UINT8& data);
 		UINT8 ReadReg(const UINT8& reg);
 		void ReadMulti(const UINT8& reg, UINT8* data, int size);
-		#ifndef JETSON_BOARD
+		#ifndef PICO
 		int init_;
 		int SPI_init_;
 		int verify_;

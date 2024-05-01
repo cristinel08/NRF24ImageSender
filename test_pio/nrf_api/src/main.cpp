@@ -1,5 +1,7 @@
 #include "RF24.h"
-#ifndef  JETSON_BOARD
+#include <chrono>
+#include <thread>
+#ifndef  PICO
 #include <JetsonGPIO.h>
 #include <time.h>
 #include <string>
@@ -10,17 +12,17 @@
 
 int main()
 {
-	UINT8 dataTx[32]		{"0Buna Cristi de pe raspberry pi"};
+	UINT8 dataTx[32]		{"Buna Cristi de pe raspberry pi!"};
 	UINT8 dataACK[32]		{"ACK____________________________"};
 	UINT8 txAddress[6]		{"2Node"};
 	UINT8 rxAddress[6] 		{"1Node"};
 	UINT8 data[32] 		 	{};
-	uint8_t retransmit		{1};
+	uint8_t retransmit		{2};
 	bool once 				{true};
-	bool received			{false};
 	uint8_t numTrasmission 	{0};
 	NRF24 nrf24{};
-	// nrf24.TxMode(rxAddress, 76);
+	auto timeProgram = std::chrono::high_resolution_clock::now();
+	double takenTime {0.0};
 	nrf24.RxMode(rxAddress, 76);
 	nrf24.OpenWritingPipe(txAddress);
 	while(1)
@@ -30,29 +32,36 @@ int main()
 			printf("Terminal connected\n");
 			once = false;
 		}
-		received  = !received;
-		dataTx[0] = received;
-		// nrf24.TransmitData(dataTx);
-		// sleep_us(200);
-		// nrf24.Set2Rx();
-		// sleep_us(2000);
-		while(nrf24.IsDataAvailable(1) == 0 )
+		while(data[0] == '\0' && (data != NULL))
 		{
-			nrf24.Set2Tx();
-			nrf24.TransmitData(dataTx);
-			nrf24.Set2Rx();
-			sleep_us(1000);
-			//varianta ce a mers:
-			// sleep_us(2100);
+			while(nrf24.IsDataAvailable(1) == 0 && retransmit)
+			{
+				nrf24.Set2Tx();
+				nrf24.TransmitData(dataTx);
+				nrf24.Set2Rx();
+				retransmit--;
+				sleep_us(2500);
+			}
+			nrf24.ReceiveData(data);
+			retransmit = 2;
 		}
 		numTrasmission++;
-		nrf24.ReceiveData(data);
 		// printf("%32s\n", data);
+		data[0] = '\0';
 		if(numTrasmission >= 128)
 		{
 			break;
 		}
 	}
-		printf("Transmited %d\n", numTrasmission);
+	takenTime = std::chrono::duration_cast<std::chrono::milliseconds>
+			(
+				std::chrono::high_resolution_clock::now() - timeProgram
+			).count();
+	printf
+	(
+		"The program took %f ms to transmit %d\n", 
+		takenTime,
+		numTrasmission * 32
+	);
 }
 

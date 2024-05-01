@@ -18,7 +18,7 @@ void NRF24::WriteReg (const UINT8& reg, const UINT8& data)
 	//pentru a selecta
 	disablePin(CSN_PIN);
 	// verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	// usleep(10);
 	if(verify_)
 	{
@@ -52,7 +52,7 @@ void NRF24::WriteRegMulti(const UINT8& reg, UINT8* data,int size)
 	{
 		*txData++ = *data++;
 	}
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	verify_ = spiXfer(SPI_init_, spiTx, spiRx, lenData);
 	#else
 	//pico_code
@@ -69,7 +69,7 @@ UINT8 NRF24::ReadReg (const UINT8& reg)
 	UINT8 cmd[2]{static_cast<UINT8>(R_REGISTER | reg), NOP};
 	//pentru a selecta dispozitivul
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	int verify_ = spiXfer(SPI_init_, cmd, spiRx, 2);
 	#else
 	//pico code
@@ -90,7 +90,7 @@ void NRF24::ReadMulti(const UINT8& reg, UINT8* data, int size)
 		*txData = NOP;
 	}
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	verify_ = spiXfer(SPI_init_, txData, rxData, lenData);
 	#else
 	//pico code
@@ -106,7 +106,7 @@ void NRF24::ReadMulti(const UINT8& reg, UINT8* data, int size)
 
 NRF24::NRF24()
 {
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	init_ = gpioInitialise();
 	if(init_ < 0)
 	{
@@ -260,7 +260,7 @@ NRF24::NRF24()
 	// SendCommand(NOP);
 	SendCommand(FLUSH_TX);
 	// SendCommand(NOP);
-	// #ifndef JETSON_BOARD
+	// #ifndef PICO
 	// spiXfer(SPI_init_, &command, nullptr, 1);
 	// command = FLUSH_TX;
 	// spiXfer(SPI_init_, &command, nullptr, 1);
@@ -282,7 +282,7 @@ NRF24::NRF24()
 
 void NRF24::enablePin(const uint8_t& pin)
 {
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	gpioWrite(pin, 1);
 	#else
 	gpio_put(pin,1);
@@ -291,7 +291,7 @@ void NRF24::enablePin(const uint8_t& pin)
 
 void NRF24::disablePin(const uint8_t& pin)
 {
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	gpioWrite(pin,0);
 	#else
 	gpio_put(pin, 0);
@@ -326,7 +326,7 @@ void NRF24::SendCommand(const UINT8& cmd)
 {
 	UINT8 buf[1]{cmd};
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	verify_ = spiXfer(SPI_init_, buf, nullptr, 1);
 	#else
 	//pico_code
@@ -347,7 +347,7 @@ void NRF24::TransmitData(UINT8* data)
 	size = 33;
 	disablePin(CSN_PIN);
 	// verify_ = spiXfer(SPI_init_, (const UINT8&*)W_TX_PAYLOAD, nullptr, 1);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	if(verify_)
 	{	
 		verify_ = spiXfer(SPI_init_, spiTx, nullptr, size);
@@ -406,7 +406,7 @@ void NRF24::Set2Rx()
 	{
 		disablePin(CE_PIN);
 		WriteReg(CONFIG, status | (1 << 0));
-		sleep_us(140);
+		sleep_us(130);
 		enablePin(CE_PIN);
 
 	}
@@ -451,7 +451,7 @@ bool NRF24::ReceiveData(UINT8* data)
 	}
 	lenData = 32 + 1;
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	verify_ = spiXfer(SPI_init_, spiTx, spiRx, lenData);
 	#else
 	//pico code

@@ -53,7 +53,7 @@
 #define CRC0		2
 #define PWR_UP		1
 
-#ifndef JETSON_BOARD
+#ifndef PICO
 #define CE_PIN 		15
 #define CSN_PIN 	24
 #else
