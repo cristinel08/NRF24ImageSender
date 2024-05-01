@@ -22,11 +22,9 @@ find_package(OpenCV REQUIRED)
 message(STATUS "ljetgpio_LIBS = ${GPIO_LIBS}")
 message(STATUS "OpenCV_LIBS=${OpenCV_LIBS}")
 
-set(EXECUTABLE
-	${ROOT_DIR}/src/RF24.cpp
-	${ROOT_DIR}/inc/RF24.h
-	${ROOT_DIR}/src/main.cpp
-	#${ljetgpio_INCLUDE_DIRS}/jetgpio.h
+file(GLOB EXECUTABLE
+	src/*.cpp
+	inc/*.h
 )
 
 set(INCLUDES
@@ -40,6 +38,7 @@ add_executable(${PROJECT_NAME} ${EXECUTABLE})
 #target_compile_definitions(${PROJECT_NAME} PUBLIC RF24_NO_INTERRUPT)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 target_link_libraries(${PROJECT_NAME} "${GPIO_LIBS}")
 

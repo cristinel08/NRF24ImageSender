@@ -1,6 +1,4 @@
-#ifndef INC_RF24_H_
-#define INC_RF24_H_
-
+#pragma once
 
 /* Memory Map */
 #define CONFIG      0x00
@@ -55,6 +53,3 @@
 
 #define CE_PIN 		15
 #define CSN_PIN 	24
-
-
-#endif /* INC_RF24_H_ */
