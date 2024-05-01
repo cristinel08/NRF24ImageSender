@@ -123,7 +123,7 @@ NRF24::NRF24()
 		std::cout << "A mers setarea pinului CSN. Codul: " << verify_ << "\n";
 	}
 
-	SPI_init_ = spiOpen(0, 1'000'000, 0, 1, 8, 0, 0);
+	SPI_init_ = spiOpen(0, 700'000, 0, 1, 8, 0, 0);
 
 	if (SPI_init_ < 0)
 	{
