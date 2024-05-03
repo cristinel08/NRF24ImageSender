@@ -1,5 +1,5 @@
 #include "CameraLib.h"
-#include "RF24.h"
+#include <RF24.h>
 #include <cstring>
 #include <chrono>
 
@@ -16,10 +16,6 @@ int main()
   uint8_t* dataToTransmit = new uint8_t[32]{};
   // uint8_t ackData[32] = {"..............................."};
   // bool isAvailable{false};
-  for(int i = 0; i < 32; i++)
-  {
-    lenghtTransmission[i] = 0;
-  }
   lenghtTransmission[0] = 0x0A;
   lenghtTransmission[1] = 0x0D;
   uint8_t* imageBuf{nullptr};
@@ -41,33 +37,18 @@ int main()
       {
         // sleep_us(500);
       }
-      sleep_ms(5);
+      sleep_ms(10);
 
       for(int i = 0; i < length;)
       {
-        // dataImg = dataImg + 32;
-        // nrf24.TransmitData(dataTransmission);
-        // if(dataToTransmit != NULL && dataToTransmit[0] == '\0')
-        // {
           if(i + 32 < length)
           {
             memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * 32);
-            // camLib.SerialUsb(dataToTransmit, 32);
-            // dataImg = dataImg + 32;
           }
           else
           {
             memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * (length - i));
-            // camLib.SerialUsb(dataToTransmit, length - i);
-            // dataImg = dataImg + (length - i);
           }
-        // }
-
-
-        //  for(int i = 0; i < 32; i++)
-        //  {
-        //     printf("Data to Transmit: %x", dataToTransmit[i]);
-        //  }
          if(dataToTransmit != nullptr)
          {
             if(nrf24.TransmitData(dataToTransmit))
@@ -81,8 +62,8 @@ int main()
                 dataImg = dataImg + (length - i);
               }
               i = i + 32;
-              // dataToTransmit[0] = '\0';
               // sleep_ms(10);
+              sleep_ms(20);
             }
 
          }
@@ -93,8 +74,9 @@ int main()
       // printf("%.4s\n",std::to_string(length).c_str());
       // camLib.SerialUsb(imageBuf, length);
       camLib.FreeFifoCam(imageBuf);
-      sleep_ms(300);
+      // sleep_ms(300);
       // sleep_ms(10);
+      sleep_ms(20);
     }
 
   }

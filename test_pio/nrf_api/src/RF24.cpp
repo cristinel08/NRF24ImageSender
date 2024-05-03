@@ -178,11 +178,11 @@ NRF24::NRF24()
 	// enablePin(CSN_PIN);
 	disablePin(CSN_PIN);
 	// usleep(5);
-	sleep_us(5);
+	sleep_ms(5);
 	
-	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0xFF);	//Retransmision(5, 15)
 	
-	if(ReadReg(SETUP_RETR) == 0x5F)
+	if(ReadReg(SETUP_RETR) == 0xF0)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -201,8 +201,8 @@ NRF24::NRF24()
 	enablePin(LED_BOARD);
 	sleep_ms(500);
 
-	WriteReg(EN_AA, 0x3F); // Enable Auto-ack on all pipes
-	if(ReadReg(EN_AA) == 0x3F)
+	WriteReg(EN_AA, 0x00); // Enable Auto-ack on all pipes
+	if(ReadReg(EN_AA) == 0x00)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -252,8 +252,8 @@ NRF24::NRF24()
 	enablePin(LED_BOARD);
 	sleep_ms(500);
 
-	WriteReg(RF_SETUP, 0x00);	//Power 18dB, data rate = 1Mbps
-	if(ReadReg(RF_SETUP) == 0x00)
+	WriteReg(RF_SETUP, 0x06);	//Power 18dB, data rate = 1Mbps
+	if(ReadReg(RF_SETUP) == 0x06)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -282,7 +282,7 @@ NRF24::NRF24()
 	// usleep(5000);
 	sleep_ms(5);
 
-	enablePin(CE_PIN);
+	// enablePin(CE_PIN);
 	enablePin(CSN_PIN);
 	// disablePin(CSN_PIN);
 }
@@ -367,6 +367,7 @@ bool NRF24::TransmitData(UINT8* data)
 	//spi_write_blocking(NRF_SPI_PORT, (const UINT8*)data, 32);
 	#endif
 	enablePin(CSN_PIN);
+	gpio_put(CE_PIN, 1);
 	// sleep_ms(1);
 	uint32_t timer = millis();
 	while(!(GetStatus() & ((1 << TX_DS) | (1 << MAX_RT))))
@@ -376,6 +377,7 @@ bool NRF24::TransmitData(UINT8* data)
 			return 0;
 		}
 	}
+	gpio_put(CE_PIN, 0);
 	// SendCommand(NOP);
 	WriteReg(STATUS, 1 << RX_DR | 1 << TX_DS | 1 << MAX_RT);
 	if(status & (1 << MAX_RT))
@@ -433,9 +435,9 @@ void NRF24::Set2Tx()
 	if(status % 2)
 	{
 		disablePin(CE_PIN);
-		WriteReg(CONFIG, status & ~(1 << 0));
 		sleep_us(280);
-		enablePin(CE_PIN);
+		WriteReg(CONFIG, status & ~(1 << 0));
+		// enablePin(CE_PIN);
 
 	}
 }
