@@ -8,8 +8,8 @@ int main()
   CameraLib camLib{};
   NRF24 nrf24{};
   camLib.StartCapture();
-  char txAddress[] = {"2Node"};
-  char rxAddress[] = {"1Node"};
+  UINT8 txAddress[] = {"2Node"};
+  UINT8 rxAddress[] = {"1Node"};
   nrf24.RxMode(rxAddress, 76);
   nrf24.OpenWritingPipe(txAddress);
   uint8_t lenghtTransmission[32]{};
@@ -37,25 +37,32 @@ int main()
       lenghtTransmission[3] = (length >> 16) & 0xFF;
       lenghtTransmission[4] = (length >> 8) & 0xFF;
       lenghtTransmission[5] =  length & 0xFF;
-      nrf24.TransmitData(lenghtTransmission);
+      while(!nrf24.TransmitData(lenghtTransmission))
+      {
+        // sleep_us(500);
+      }
       sleep_ms(5);
 
       for(int i = 0; i < length;)
       {
         // dataImg = dataImg + 32;
         // nrf24.TransmitData(dataTransmission);
-        if(i + 32 < length)
-        {
-          memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * 32);
-          // camLib.SerialUsb(dataToTransmit, 32);
-          // dataImg = dataImg + 32;
-        }
-        else
-        {
-          memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * (length - i));
-          // camLib.SerialUsb(dataToTransmit, length - i);
-          // dataImg = dataImg + (length - i);
-        }
+        // if(dataToTransmit != NULL && dataToTransmit[0] == '\0')
+        // {
+          if(i + 32 < length)
+          {
+            memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * 32);
+            // camLib.SerialUsb(dataToTransmit, 32);
+            // dataImg = dataImg + 32;
+          }
+          else
+          {
+            memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * (length - i));
+            // camLib.SerialUsb(dataToTransmit, length - i);
+            // dataImg = dataImg + (length - i);
+          }
+        // }
+
 
         //  for(int i = 0; i < 32; i++)
         //  {
@@ -63,19 +70,8 @@ int main()
         //  }
          if(dataToTransmit != nullptr)
          {
-            nrf24.TransmitData(dataToTransmit);
-            // time = std::chrono::high_resolution_clock::now();
-            // while(!isAvailable && (us.count() < 1000))
-            // {
-            //   // nrf24.TransmitData(ackData);
-            //   // isAvailable = nrf24.IsDataAvailable(1);
-            //   duration = std::chrono::high_resolution_clock::now() - time;
-            //   us = std::chrono::duration_cast<std::chrono::microseconds>(duration);
-            //   // sleep_ms(1);
-            // }
-            // us = us.zero();
-            // if(isAvailable)
-            // {
+            if(nrf24.TransmitData(dataToTransmit))
+            {
               if(i + 32 < length)
               {
                 dataImg = dataImg + 32;
@@ -85,10 +81,10 @@ int main()
                 dataImg = dataImg + (length - i);
               }
               i = i + 32;
-              // isAvailable = false;
-            // }
-            // nrf24.ReceiveData(dataRx);
-            sleep_ms(1);
+              // dataToTransmit[0] = '\0';
+              // sleep_ms(10);
+            }
+
          }
 
         //  printf("Index: %d", i);
@@ -97,6 +93,7 @@ int main()
       // printf("%.4s\n",std::to_string(length).c_str());
       // camLib.SerialUsb(imageBuf, length);
       camLib.FreeFifoCam(imageBuf);
+      sleep_ms(300);
       // sleep_ms(10);
     }
 

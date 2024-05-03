@@ -1,5 +1,5 @@
 #include "RF24.h"
-#ifndef  JETSON_BOARD
+#ifndef  PICO
 #include <JetsonGPIO.h>
 #include <time.h>
 #include <string>

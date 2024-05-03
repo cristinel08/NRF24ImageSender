@@ -266,7 +266,7 @@
 
 /*spi pin source*/
 #define SPI_PORT spi1
-#define PIN_SCK  14
+#define PIN_SCK  10
 #define PIN_MOSI 11
 #define PIN_MISO 12
 #define PIN_CS   13
@@ -274,8 +274,8 @@
 
 /*i2c pin source */
 #define I2C_PORT i2c1
-#define PIN_SDA  26
-#define PIN_SCL  27
+#define PIN_SDA  14
+#define PIN_SCL  15
 #define WRITE_BIT 0x80
 
 #define UART_ID uart0

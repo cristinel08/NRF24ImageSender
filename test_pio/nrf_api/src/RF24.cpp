@@ -8,22 +8,28 @@ NRF24::~NRF24()
 	spi_deinit(NRF_SPI_PORT);
 	disablePin(CSN_PIN);
 }
-void NRF24::WriteReg (const char& reg, const char& data)
+UINT8 NRF24::GetStatus()
 {
-	uint8_t buf[2];
+	WriteReg(NOP, NOP);
+	return status;
+}
+void NRF24::WriteReg (const UINT8& reg, const UINT8& data)
+{
+	UINT8 buf[2];
 	buf[0] = W_REGISTER | reg;//|1<<5;
 	buf[1] = data;
-	// char cmd = W_REGISTER;
+	UINT8 rxData[2]{};
+	// UINT8 cmd = W_REGISTER;
 	
 	//pentru a selecta
 	disablePin(CSN_PIN);
 	// verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
-	#ifndef JETSON_BOARD
-	usleep(10);
+	#ifndef PICO
+	// usleep(10);
 	if(verify_)
 	{
 		verify_ = spiXfer(SPI_init_, buf, nullptr, 2);
-		usleep(10);
+		// usleep(10);
 	}
 
 	if(verify_ < 0)
@@ -33,70 +39,72 @@ void NRF24::WriteReg (const char& reg, const char& data)
 	}
 	#else
 	//pico code ...
-	sleep_us(10);
-	spi_write_read_blocking(NRF_SPI_PORT, buf, nullptr, 2);
+	// sleep_us(10);
+	spi_write_read_blocking(NRF_SPI_PORT, buf, rxData, 2);
 	#endif
+	status = rxData[0];
 	enablePin(CSN_PIN);
 }
 //write multiple datas
-void NRF24::WriteRegMulti(const char& reg, char* data, uint8_t len)
+void NRF24::WriteRegMulti(const UINT8& reg, UINT8* data,int size)
 {
 	disablePin(CSN_PIN);
-	uint8_t* txData = spiTx;
-	size = len + 1; //32 bytes data + 1 byte command
+	UINT8* rxData = spiRx;
+	UINT8* txData = spiTx;
+	lenData = size + 1; //32 bytes data + 1 byte command
 	
 	*txData++ = W_REGISTER | (REGISTER_MASK & reg);
 
-	while (len--)
+	while (size--)
 	{
 		*txData++ = *data++;
 	}
-	#ifndef JETSON_BOARD
-	verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
+	#ifndef PICO
+	verify_ = spiXfer(SPI_init_, spiTx, spiRx, lenData);
 	#else
 	//pico_code
-	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, size);
+	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, lenData);
 	#endif
+
+	status = *rxData;
 
 	enablePin(CSN_PIN);
 }
 //read 1 byte
-char NRF24::ReadReg (const char& reg)
+UINT8 NRF24::ReadReg (const UINT8& reg)
 {
-	uint8_t data='0';
-	uint8_t cmd[2]{R_REGISTER | reg, NOP};
+	UINT8 cmd[2]{static_cast<UINT8>(R_REGISTER | reg), NOP};
 	//pentru a selecta dispozitivul
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	int verify_ = spiXfer(SPI_init_, cmd, spiRx, 2);
 	#else
 	//pico code
 	spi_write_read_blocking(NRF_SPI_PORT, cmd, spiRx, 2);
 	#endif
-	data = spiRx[1];
 	enablePin(CSN_PIN);
-	return data;
+	return spiRx[1];
 }
-void NRF24::ReadMulti(const char& reg, char* data, uint8_t len)
+void NRF24::ReadMulti(const UINT8& reg, UINT8* data, int size)
 {	
 	//pentru a selecta dispozitivul
-	uint8_t* txData = spiTx;
-	uint8_t* rxData = spiRx;
-	size = len + 1; // 32 data + 1 command
+	UINT8* txData = spiTx;
+	UINT8* rxData = spiRx;
+	lenData = size + 1; // 32 data + 1 command
 	*txData = R_REGISTER | reg;
-	while (len--)
+	while (size--)
 	{
 		*txData = NOP;
 	}
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
-	verify_ = spiXfer(SPI_init_, txData, rxData, size);
+	#ifndef PICO
+	verify_ = spiXfer(SPI_init_, txData, rxData, lenData);
 	#else
 	//pico code
-	spi_write_read_blocking(NRF_SPI_PORT, txData, rxData, size);
+	spi_write_read_blocking(NRF_SPI_PORT, txData, rxData, lenData);
 	#endif
-	rxData++; //status
-	while(--size)
+	status = *rxData++;
+	while(--lenData)
 	{
 		*data++ = *rxData++;
 	}
@@ -105,7 +113,7 @@ void NRF24::ReadMulti(const char& reg, char* data, uint8_t len)
 
 NRF24::NRF24()
 {
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	init_ = gpioInitialise();
 	if(init_ < 0)
 	{
@@ -138,7 +146,7 @@ NRF24::NRF24()
 		std::cout << "A mers setarea pinului CSN. Codul: " << verify_ << "\n";
 	}
 
-	SPI_init_ = spiOpen(0, 10'000'000, 0, 0, 8, 0, 0);
+	SPI_init_ = spiOpen(0, 10000000, 0, 1, 8, 0, 0);
 
 	if (SPI_init_ < 0)
 	{
@@ -153,8 +161,7 @@ NRF24::NRF24()
 	}
 	#else
 	//pico_code
-	// stdio_init_all();
-	// tusb_init();
+	stdio_init_all();
 	spi_init(NRF_SPI_PORT, 10'000'000);
 	gpio_set_function(MISO_PIN, GPIO_FUNC_SPI);
 	gpio_set_function(SCK_PIN, GPIO_FUNC_SPI);
@@ -172,11 +179,10 @@ NRF24::NRF24()
 	disablePin(CSN_PIN);
 	// usleep(5);
 	sleep_us(5);
-
 	
-	WriteReg(SETUP_RETR, 0x00);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
 	
-	if(ReadReg(SETUP_RETR) == 0x00)
+	if(ReadReg(SETUP_RETR) == 0x5F)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -187,7 +193,7 @@ NRF24::NRF24()
 
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
-	if(ReadReg(SETUP_RETR) == 0x00)
+	if(ReadReg(DYNPD) == 0x00)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -195,8 +201,8 @@ NRF24::NRF24()
 	enablePin(LED_BOARD);
 	sleep_ms(500);
 
-	WriteReg(EN_AA, 0x00); // Enable Auto-ack on all pipes
-	if(ReadReg(EN_AA) == 0x00)
+	WriteReg(EN_AA, 0x3F); // Enable Auto-ack on all pipes
+	if(ReadReg(EN_AA) == 0x3F)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -246,8 +252,8 @@ NRF24::NRF24()
 	enablePin(LED_BOARD);
 	sleep_ms(500);
 
-	WriteReg(RF_SETUP, 0x06);	//Power 18dB, data rate = 1Mbps
-	if(ReadReg(RF_SETUP) == 0x06)
+	WriteReg(RF_SETUP, 0x00);	//Power 18dB, data rate = 1Mbps
+	if(ReadReg(RF_SETUP) == 0x00)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -256,10 +262,12 @@ NRF24::NRF24()
 	WriteReg(STATUS, 0x70);
 
 	// WriteReg(FLUSH_RX, NOP);	//RESET RX
-	// char command = FLUSH_RX;
+	// UINT8 command = FLUSH_RX;
 	SendCommand(FLUSH_RX);
+	// SendCommand(NOP);
 	SendCommand(FLUSH_TX);
-	// #ifndef JETSON_BOARD
+	// SendCommand(NOP);
+	// #ifndef PICO
 	// spiXfer(SPI_init_, &command, nullptr, 1);
 	// command = FLUSH_TX;
 	// spiXfer(SPI_init_, &command, nullptr, 1);
@@ -281,27 +289,28 @@ NRF24::NRF24()
 
 void NRF24::enablePin(const uint8_t& pin)
 {
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	gpioWrite(pin, 1);
 	#else
 	gpio_put(pin,1);
+	sleep_us(5);
 	#endif
 }
 
 void NRF24::disablePin(const uint8_t& pin)
 {
-	#ifndef JETSON_BOARD
+	#ifndef PICO
 	gpioWrite(pin,0);
 	#else
 	gpio_put(pin, 0);
+	sleep_us(5);
 	#endif
 }
-void NRF24::OpenWritingPipe(char* address)
+void NRF24::OpenWritingPipe(UINT8* address)
 {
-	WriteRegMulti(RX_ADDR_P0, address, 5);
 	WriteRegMulti(TX_ADDR, address, 5);
 }
-void NRF24::TxMode(char* address, const char& channel)
+void NRF24::TxMode(UINT8* address, const UINT8& channel)
 {
 	disablePin(CE_PIN);
 	//enablePin(CSN_PIN);
@@ -314,108 +323,71 @@ void NRF24::TxMode(char* address, const char& channel)
 	// WriteRegMulti(RX_ADDR_P0, address, 5);
 	
 	//power up the device 
-	config = ReadReg(CONFIG);
-	config = config | (1 << 1);
-	WriteReg(CONFIG, config);
+	status = ReadReg(CONFIG);
+	status = status | (1 << PWR_UP);
+	WriteReg(CONFIG, status);
 	// WriteReg(CONFIG, 0x0f);
 	enablePin(CE_PIN);
 	//disablePin(CSN_PIN);
 }	
 
-void NRF24::SendCommand(char cmd)
+void NRF24::SendCommand(const UINT8& cmd)
 {
+	UINT8 buf[1]{cmd};
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
-	verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
+	#ifndef PICO
+	verify_ = spiXfer(SPI_init_, buf, nullptr, 1);
 	#else
 	//pico_code
-	spi_write_read_blocking(NRF_SPI_PORT, (uint8_t*)&cmd, nullptr, 1);
+	spi_write_read_blocking(NRF_SPI_PORT, buf, nullptr, 1);
 	#endif
 	enablePin(CSN_PIN);
 }
 
-void NRF24::TransmitData(uint8_t* data)
+bool NRF24::TransmitData(UINT8* data)
 {
-	//char cmd
+	//UINT8 cmd
 	//disablePin(CSN_PIN);
-	if(ReadReg(CONFIG) % 2)
-	{
-		disablePin(CE_PIN);
-		WriteReg(CONFIG, ReadReg(CONFIG) - 1);
-		enablePin(CE_PIN);
-		sleep_us(140);
-		// printf("ENTER IN TRANSMIT MODE");
-	}
-	uint8_t* txData = spiTx; 
+	UINT8* txData = spiTx; 
 	*txData++ = W_TX_PAYLOAD;
-	size = 33;
-	while(--size)
-	{
-		*txData++ = *data++;
-	}
+	Set2Tx();
+	UINT8 size = 33;
+	memcpy(txData, data, sizeof(UINT8) * 32);
 	size = 33;
 	disablePin(CSN_PIN);
-	// verify_ = spiXfer(SPI_init_, (char*)W_TX_PAYLOAD, nullptr, 1);
-	#ifndef JETSON_BOARD
+	// verify_ = spiXfer(SPI_init_, (const UINT8&*)W_TX_PAYLOAD, nullptr, 1);
+	#ifndef PICO
 	if(verify_)
 	{	
-		verify_ = spiXfer(SPI_init_, data, nullptr,	32);
+		verify_ = spiXfer(SPI_init_, spiTx, nullptr, size);
 	}
 	#else
 	//pico code
-	spi_write_read_blocking(NRF_SPI_PORT, spiTx, nullptr, size);
-	//spi_write_blocking(NRF_SPI_PORT, (const uint8_t*)data, 32);
+	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, size);
+	//spi_write_blocking(NRF_SPI_PORT, (const UINT8*)data, 32);
 	#endif
-
 	enablePin(CSN_PIN);
-
-	// usleep(1);
-	// sleep_us(1000);
-	sleep_ms(1);
-	fifo = ReadReg(FIFO_STATUS);
-	// SendCommand(NOP);
-
-	// if(fifo & (1 << MAX_RT) || fifo & (1 << TX_DS) || fifo & (1 << RX_DR))
-	if (!(fifo & (1 << 4)))
+	// sleep_ms(1);
+	uint32_t timer = millis();
+	while(!(GetStatus() & ((1 << TX_DS) | (1 << MAX_RT))))
 	{
-		if(!(fifo&(1<<3)))
+		if(millis() - timer > 95)
 		{
-			// printf("It transmited data");
-			// SendCommand(REUSE_TX_PL);
-			status = ReadReg(STATUS);
-			if(status & (1 << MAX_RT))
-			{
-				WriteReg(STATUS, 1 << MAX_RT);
-			}
-			if (status & (1 << TX_DS))
-			{
-				WriteReg(STATUS, 1 << TX_DS);
-			}
-			// else
-			// {
-			// 	// SendCommand(REUSE_TX_PL);
-			// }
-			// if(status & (1 << RX_DR))
-			// {
-			// 	WriteReg(STATUS, 1 << RX_DR);
-			// }
-			// WriteReg(STATUS, 1 << MAX_RT | 1 << TX_DS);
-			SendCommand(NOP);
-			SendCommand(FLUSH_TX);
-			SendCommand(NOP);
-		}
-		else
-		{
-			// printf("The device isn't connected");
-			SendCommand(FLUSH_TX);
-			SendCommand(NOP);
+			return 0;
 		}
 	}
-
+	// SendCommand(NOP);
+	WriteReg(STATUS, 1 << RX_DR | 1 << TX_DS | 1 << MAX_RT);
+	if(status & (1 << MAX_RT))
+	{
+		SendCommand(FLUSH_RX);
+		return 0;
+	}
+	return 1;
 }
 
 
-void NRF24::RxMode(char* address, const char& channel)
+void NRF24::RxMode(UINT8* address, const UINT8& channel)
 {
 	disablePin(CE_PIN);
 	//enablePin(CSN_PIN);
@@ -431,29 +403,46 @@ void NRF24::RxMode(char* address, const char& channel)
 	WriteReg(RX_PW_P1, 32);
 
 	//power up the device in RX mode
-	config = ReadReg(CONFIG);
-	config = config | (1 << 1) | (1 << 0);
-	WriteReg(CONFIG, config);
+	status = ReadReg(CONFIG);
+	status = status | (1 << 1) | (1 << 0);
+	WriteReg(CONFIG, status);
 	WriteReg(STATUS, 0x70);
-	en_rxaddr = ReadReg(EN_RXADDR);
+	status = ReadReg(EN_RXADDR);
 
-	WriteReg(EN_RXADDR, en_rxaddr | (1<<0) | 1 << 1); 
-	// WriteReg(CONFIG, 0x0e);
+	WriteReg(EN_RXADDR, status | (1 << 1)); 
 	enablePin(CE_PIN);
-	//disablePin(CSN_PIN);
 
 }	
 
-uint8_t NRF24::IsDataAvailable(const uint8_t& pipeNr)
+void NRF24::Set2Rx()
 {
-	if(ReadReg(CONFIG) % 2 == 0)
+	status = ReadReg(CONFIG);
+	if(status % 2 == 0)
 	{
 		disablePin(CE_PIN);
-		WriteReg(CONFIG, ReadReg(CONFIG) + 1);
-		// printf("ENTER IN RX_MODE: \n");
+		WriteReg(CONFIG, status | (1 << 0));
+		sleep_us(280);
 		enablePin(CE_PIN);
-		sleep_us(130);
+
 	}
+}
+
+void NRF24::Set2Tx()
+{
+	status = ReadReg(CONFIG);
+	if(status % 2)
+	{
+		disablePin(CE_PIN);
+		WriteReg(CONFIG, status & ~(1 << 0));
+		sleep_us(280);
+		enablePin(CE_PIN);
+
+	}
+}
+
+UINT8 NRF24::IsDataAvailable(const uint8_t& pipeNr)
+{
+	Set2Rx();
 	status = ReadReg(STATUS);
 	if ((status & (1 << RX_DR)) && 
 	    (status & (pipeNr << 1)))
@@ -464,33 +453,29 @@ uint8_t NRF24::IsDataAvailable(const uint8_t& pipeNr)
 	return 0;
 }
 
-bool NRF24::ReceiveData(char* data)
+bool NRF24::ReceiveData(UINT8* data)
 {
-	uint8_t* txData = spiTx;
-	uint8_t* rxData = spiRx;
-	size = 32 + 1;
+	UINT8* txData = spiTx;
+	UINT8* rxData = spiRx;
+	lenData = 32 + 1;
 	*txData++ = R_RX_PAYLOAD;
-	while (--size)
+	while (--lenData)
 	{
 		*txData++ = NOP;
 	}
-	size = 32 + 1;
+	lenData = 32 + 1;
 	disablePin(CSN_PIN);
-	#ifndef JETSON_BOARD
-	verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
+	#ifndef PICO
+	verify_ = spiXfer(SPI_init_, spiTx, spiRx, lenData);
 	#else
 	//pico code
-	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, size);
+	spi_write_read_blocking(NRF_SPI_PORT, spiTx, spiRx, lenData);
 	#endif
-	rxData++;//status
-	memcpy(data, rxData, sizeof(char)*32);
-	// printf("%32s\n", rxData);
 	enablePin(CSN_PIN);
-
-	//asta e un bug, trb sa continui sa citesc pana cand eliberez memoria
-	//din RX fifo, nu trb sa-i dau flush
-	fifo = ReadReg(FIFO_STATUS);
-	return !(fifo & (1 << 0)); 
+	status = *rxData++;
+	memcpy(data, rxData, sizeof(UINT8) * (lenData - 1));
+	status = ReadReg(FIFO_STATUS);
+	return !(status & 1); 
 }
 
 

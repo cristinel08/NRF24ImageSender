@@ -3,7 +3,7 @@
 #include "hardware/spi.h"
 #include "hardware/clocks.h"
 #include "CameraOV2640.h"
-#include "tusb.h"
+// #include "tusb.h"
 #include "string"
 
 class CameraLib
