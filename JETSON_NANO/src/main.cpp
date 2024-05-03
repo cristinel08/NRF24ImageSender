@@ -1,16 +1,33 @@
-#include "NRF24.h"
 #include "DataReceived.h"
-#include<iostream>
-#include<time.h>
-#include<string>
-#include <cstring>
-#include<ctime>
+#include <vector>
 
 int main()
 {
-	char a{};
+	std::vector<char> jpegReceive;
+	jpegReceive.reserve(UINT16_MAX);
+	for(uint16_t i = 0; i < UINT16_MAX; i++)
+	{
+		jpegReceive.emplace_back(0);
+	}
+
+	// std::unique_ptr<char[]> jpegReceive = std::make_unique<char[]>(UINT16_MAX);
+	bool copied { false };
 	DataReceived receiveData{};
 	receiveData.StartReceiving();
-	std::cin >> a;
+	while(1)
+	{
+		// receiveData.
+		receiveData.CopyData(jpegReceive.data(), copied);
+		if (copied)
+		{
+			if(receiveData.DecodeAndSaveImg(jpegReceive))
+			{
+				break;
+			}
+			copied = false;
+		}
+	}
+	jpegReceive.clear();
+	// std::cin >> a;
 }
 

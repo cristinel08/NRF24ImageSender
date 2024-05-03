@@ -14,6 +14,7 @@ NRF24::~NRF24()
 	WriteReg(CONFIG, 0x00);
 	spiClose(SPI_init_);
 	disablePin(CSN_PIN);
+	gpioTerminate();
 }
 void NRF24::WriteReg (const char& reg, const char& data)
 {
@@ -151,11 +152,11 @@ NRF24::NRF24()
 	usleep(5'000);
 
 	
-	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0xFF);	//Retransmision(5, 15)
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
-	WriteReg(EN_AA, 0x3F); // Enable Auto-ack on all pipes
+	WriteReg(EN_AA, 0x00); // Enable Auto-ack on all pipes
 
 	WriteReg(EN_RXADDR, 0x03);//, SPI_init, init); //0 data pipes enabled
 
@@ -169,7 +170,7 @@ NRF24::NRF24()
 
 	WriteReg(RF_CH, 0x4c);	    //Channel will be setup in  during TX or RX
 
-	WriteReg(RF_SETUP, 0x00);	//Power 0dB, data rate = 1Mbps
+	WriteReg(RF_SETUP, 0x06);	//Power 0dB, data rate = 1Mbps
 	
 	WriteReg(STATUS, 0x70);
 
