@@ -22,9 +22,9 @@ int main()
 	while(1)
 	{
 
-		while(nrf24.IsDataAvailable(1))
-		{ 	
-			timeToReceiveAndTransmit = std::chrono::high_resolution_clock::now();
+		// while(nrf24.IsDataAvailable(1))
+		// { 	
+			// timeToReceiveAndTransmit = std::chrono::high_resolution_clock::now();
 			// usleep(10);
 			// usleep(500);
 			// usleep(300);
@@ -33,13 +33,17 @@ int main()
 			// nrf24.Set2Rx();
 			// nrf24.Set2Tx();
 			// usleep(10);
-			nrf24.TransmitData(dataTx);	
+			if(nrf24.TransmitData(dataTx))
+			{
+				printf("Transmitted data\n");
+				received++;
+			}	
 			// timeTook = 
 			// 	std::chrono::duration_cast<std::chrono::nanoseconds>
 			// 	(
 			// 		std::chrono::high_resolution_clock::now() - timeToReceiveAndTransmit
 			// 	).count();
-			nrf24.ReceiveData(dataRx);
+			// nrf24.ReceiveData(dataRx);
 			// if (dataRx[0] != anotherValue)
 			// {
 			// 	// usleep(900);
@@ -47,13 +51,14 @@ int main()
 			// 	anotherValue = dataRx[0];
 			// 	// printf("%32s\n",dataRx);
 			// }
-			received++;
+			// received++;
 			if(received >= 128)
 			{
-				printf("Received: %d\n", received++);
-				// exit(0);
+				printf("Transmitted: %d\n", received++);
+				received = 0;
+			// 	// exit(0);
 			}
-		}
+		// }
 		// sleep(1);
 	}
 }

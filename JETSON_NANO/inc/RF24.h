@@ -15,7 +15,7 @@ class NRF24{
 		void enablePin(const uint8_t& pin);
 		void disablePin(const uint8_t& pin);
 		void TxMode(char* address, const char& channel);
-		void TransmitData(char* data);
+		bool TransmitData(char* data);
 		void RxMode(char* address, const char& data);
 		void Set2Tx();
 		void Set2Rx();
@@ -38,5 +38,6 @@ class NRF24{
 		void WriteRegMulti(const char& reg,char* data, uint8_t size);
 		void WriteReg(const char& reg, const char& data);
 		char ReadReg(const char& reg);
+		char GetStatus();
 		void ReadMulti(const char& reg,char* data, uint8_t size);
 };
