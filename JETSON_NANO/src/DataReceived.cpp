@@ -4,7 +4,7 @@ DataReceived::DataReceived()
 {
     nrf24_ = std::make_unique<NRF24>();
     nrf24_->RxMode(rxAddress_, channel_);
-	nrf24_->OpenWritingAddress(txAddress_);
+	nrf24_->OpenWritingPipe(txAddress_);
 }
 DataReceived::~DataReceived()
 {
@@ -37,7 +37,7 @@ void DataReceived::CopyData()
     std::unique_lock<std::mutex>lk(copyMutex);
 }
 
-void DataReceived::CopyJpgImg(uint16_t& jpgImgSize)
+void DataReceived::CopyJpgImg(int16_t& jpgImgSize)
 {
     while(jpgImgSize > 0)
     {
@@ -68,7 +68,7 @@ void DataReceived::DecodeAndSaveImg()
         // cv::waitKey(1);
         cv::imwrite("imgs/" + std::to_string(indexImg_)
                         +".jpg", img_);
-        cv::waitKey(1);
+        // cv::waitKey(1);
         indexImg_++;
     }
 }

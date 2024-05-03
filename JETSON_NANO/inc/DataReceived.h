@@ -20,7 +20,7 @@ public:
 private:
     void ColectData();
     void DecodeAndSaveImg();
-    void CopyJpgImg(uint16_t& jpgImgSize);
+    void CopyJpgImg(int16_t& jpgImgSize);
 
 private:
 	cv::Mat img_                               {  };
@@ -29,7 +29,7 @@ private:
     char txAddress_[6]                         { "1Node" };
     char rxAddress_[6]                         { "2Node" };
     std::vector<char> jpegImg_                 {  };
-    uint16_t jpegDataSize_                     { 0 };
+    int16_t jpegDataSize_                      { 0 };
     const uint8_t BYTES_RECEIVED               { 32 };
     char* populateJpeg_                        { nullptr };
     std::unique_ptr<NRF24> nrf24_              { nullptr };

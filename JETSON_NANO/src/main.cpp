@@ -8,7 +8,9 @@
 
 int main()
 {
+	char a{};
 	DataReceived receiveData{};
 	receiveData.StartReceiving();
+	std::cin >> a;
 }
 
