@@ -180,9 +180,9 @@ NRF24::NRF24()
 	// usleep(5);
 	sleep_ms(5);
 	
-	WriteReg(SETUP_RETR, 0xFF);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
 	
-	if(ReadReg(SETUP_RETR) == 0xF0)
+	if(ReadReg(SETUP_RETR) == 0x5F)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -201,8 +201,8 @@ NRF24::NRF24()
 	enablePin(LED_BOARD);
 	sleep_ms(500);
 
-	WriteReg(EN_AA, 0x00); // Enable Auto-ack on all pipes
-	if(ReadReg(EN_AA) == 0x00)
+	WriteReg(EN_AA, 0x3F); // Enable Auto-ack on all pipes
+	if(ReadReg(EN_AA) == 0x3F)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -308,6 +308,7 @@ void NRF24::disablePin(const uint8_t& pin)
 }
 void NRF24::OpenWritingPipe(UINT8* address)
 {
+	WriteRegMulti(RX_ADDR_P0, address, 5);
 	WriteRegMulti(TX_ADDR, address, 5);
 }
 void NRF24::TxMode(UINT8* address, const UINT8& channel)
@@ -421,10 +422,10 @@ void NRF24::Set2Rx()
 	status = ReadReg(CONFIG);
 	if(status % 2 == 0)
 	{
-		disablePin(CE_PIN);
 		WriteReg(CONFIG, status | (1 << 0));
-		sleep_us(280);
+		WriteReg(EN_RXADDR, ReadReg(EN_RXADDR) & ~(1 << 0));
 		enablePin(CE_PIN);
+
 
 	}
 }
@@ -437,6 +438,7 @@ void NRF24::Set2Tx()
 		disablePin(CE_PIN);
 		sleep_us(280);
 		WriteReg(CONFIG, status & ~(1 << 0));
+		WriteReg(EN_RXADDR, ReadReg(EN_RXADDR) | (1 << 0));
 		// enablePin(CE_PIN);
 
 	}

@@ -37,7 +37,7 @@ int main()
       {
         // sleep_us(500);
       }
-      sleep_ms(10);
+      // sleep_ms(100);
 
       for(int i = 0; i < length;)
       {
@@ -63,7 +63,7 @@ int main()
               }
               i = i + 32;
               // sleep_ms(10);
-              sleep_ms(20);
+              // sleep_ms(50);
             }
 
          }
@@ -72,11 +72,11 @@ int main()
     
       }
       // printf("%.4s\n",std::to_string(length).c_str());
-      // camLib.SerialUsb(imageBuf, length);
+      camLib.SerialUsb(imageBuf, length);
       camLib.FreeFifoCam(imageBuf);
       // sleep_ms(300);
       // sleep_ms(10);
-      sleep_ms(20);
+      // sleep_ms(20);
     }
 
   }

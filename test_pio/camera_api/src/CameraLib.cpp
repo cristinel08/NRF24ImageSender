@@ -5,7 +5,7 @@
 CameraLib::CameraLib()
 {
     stdio_init_all();
-    // tusb_init();
+    tusb_init();
     gpio_init(LED_BOARD);
     gpio_set_dir(LED_BOARD, GPIO_OUT);
     toggle = true;
@@ -104,54 +104,54 @@ void CameraLib::StartCapture()
 
 void CameraLib::SerialUsb(uint8_t* imageBuf_, const int& length)
 {
-    // static uint64_t last_avail_time{};
-    // int n{};
-    // int avail{};
-    // int n2{};
-    // if (tud_cdc_connected()) 
-    // {
-    //     for (int i = 0; i < length;) 
-    //     {
-    //         n = length - i;
-    //         avail = tud_cdc_write_available();
-    //         if (n > avail) n = avail;
-    //         if (n) 
-    //         {
-    //             n2 = tud_cdc_write(imageBuf_ + i, n);
-    //             tud_task();
-    //             tud_cdc_write_flush();
-    //             i += n2;
-    //             last_avail_time = time_us_64();
-    //         } 
-    //         else 
-    //         {
-    //             tud_task();
-    //             tud_cdc_write_flush();
-    //             if (!tud_cdc_connected() ||
-    //                 (!tud_cdc_write_available() && time_us_64() > last_avail_time + 1000000 /* 1 second */)) {
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // } 
-    // else 
-    // {
-    //     // reset our timeout
-    //     last_avail_time = 0;
-    // }
+    static uint64_t last_avail_time{};
+    int n{};
+    int avail{};
+    int n2{};
+    if (tud_cdc_connected()) 
+    {
+        for (int i = 0; i < length;) 
+        {
+            n = length - i;
+            avail = tud_cdc_write_available();
+            if (n > avail) n = avail;
+            if (n) 
+            {
+                n2 = tud_cdc_write(imageBuf_ + i, n);
+                tud_task();
+                tud_cdc_write_flush();
+                i += n2;
+                last_avail_time = time_us_64();
+            } 
+            else 
+            {
+                tud_task();
+                tud_cdc_write_flush();
+                if (!tud_cdc_connected() ||
+                    (!tud_cdc_write_available() && time_us_64() > last_avail_time + 1000000 /* 1 second */)) {
+                    break;
+                }
+            }
+        }
+    } 
+    else 
+    {
+        // reset our timeout
+        last_avail_time = 0;
+    }
 }
 
 int CameraLib::SerialUSBAvailable()
 {
-    // return tud_cdc_available();
+    return tud_cdc_available();
     return 0;
 }
 
 int CameraLib::SerialUsbRead()
 {
-    // if (tud_cdc_connected() && tud_cdc_available()) 
-    // {
-    // return tud_cdc_read_char();
-    // }
+    if (tud_cdc_connected() && tud_cdc_available()) 
+    {
+    return tud_cdc_read_char();
+    }
     return -1;
 }
