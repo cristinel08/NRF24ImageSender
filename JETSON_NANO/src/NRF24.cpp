@@ -132,7 +132,7 @@ NRF24::NRF24()
 		std::cout << "A mers setarea pinului CSN. Codul: " << verify_ << "\n";
 	}
 
-	SPI_init_ = spiOpen(0, 10'00'000, 0, 1, 8, 0, 0);
+	SPI_init_ = spiOpen(0, 10'00'000, 0, 0, 8, 0, 0);
 
 	if (SPI_init_ < 0)
 	{
@@ -152,11 +152,11 @@ NRF24::NRF24()
 	usleep(5'000);
 
 	
-	WriteReg(SETUP_RETR, 0xFF);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
-	WriteReg(EN_AA, 0x00); // Enable Auto-ack on all pipes
+	WriteReg(EN_AA, 0x3F); // Enable Auto-ack on all pipes
 
 	WriteReg(EN_RXADDR, 0x03);//, SPI_init, init); //0 data pipes enabled
 
@@ -204,7 +204,7 @@ void NRF24::disablePin(const uint8_t& pin)
 }
 void NRF24::OpenWritingPipe(char* address)
 {
-	// WriteRegMulti(RX_ADDR_P0, address, 5);
+	WriteRegMulti(RX_ADDR_P0, address, 5);
 	WriteRegMulti(TX_ADDR, address, 5);
 }
 void NRF24::TxMode(char* address, const char& channel)
