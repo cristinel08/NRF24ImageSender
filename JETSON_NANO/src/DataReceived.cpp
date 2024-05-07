@@ -83,27 +83,17 @@ void DataReceived::CopyJpgImg(int16_t& jpgImgSize)
 
 bool DataReceived::DecodeAndSaveImg(std::vector<char>& jpegImg)
 {
-    try
-    {
         img_ = cv::imdecode(jpegImg_, cv::IMREAD_COLOR);
-
-    }
-    catch(const cv::Exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        // jpegImg.clear();
-    }
-
-    if(!img_.empty())
-    {
-        cv::imshow("Image test", img_);
-        cmd_ = cv::waitKey(1);
-        if(cmd_ != '\0')
+        if(!img_.empty())
         {
-            return CheckCommand();
-        }
-        // cv::imwrite("imgs/" + std::to_string(indexImg_)
-        //                 +".jpg", img_);
+            cv::imwrite("imgs/" + std::to_string(indexImg_)
+                        +".jpg", img_);
+        // cmd_ = cv::waitKey(1);
+        // if(cmd_ != '\0')
+        // {
+        //     return CheckCommand();
+        // }
+
         // indexImg_++;
     }
 
@@ -154,7 +144,7 @@ void DataReceived::ColectData()
 				// jpegImg_ = std::vector<char>(jpegDataSize_);
 				populateJpeg_ = jpegImg_.data();
                 CopyJpgImg(jpegDataSize_);
-                DecodeAndSaveImg(jpegImg_);
+                // DecodeAndSaveImg(jpegImg_);
             }
 
         }

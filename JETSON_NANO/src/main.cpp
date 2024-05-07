@@ -27,7 +27,7 @@ int main()
 			copied = false;
 		}
 	}
-	jpegReceive.clear();
+	// jpegReceive.clear();
 	// std::cin >> a;
 }
 
