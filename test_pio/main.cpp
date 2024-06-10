@@ -19,6 +19,7 @@ int main()
   lenghtTransmission[0] = 0x0A;
   lenghtTransmission[1] = 0x0D;
   uint8_t* imageBuf{nullptr};
+  uint8_t transmitSize{32};
   // auto time = std::chrono::high_resolution_clock::now();
   // std::chrono::duration<float> duration{};
   // std::chrono::microseconds us;
@@ -33,50 +34,28 @@ int main()
       lenghtTransmission[3] = (length >> 16) & 0xFF;
       lenghtTransmission[4] = (length >> 8) & 0xFF;
       lenghtTransmission[5] =  length & 0xFF;
-      while(!nrf24.TransmitData(lenghtTransmission))
+      while(!nrf24.TransmitData(lenghtTransmission, 32))
       {
-        // sleep_us(500);
       }
-      // sleep_ms(100);
 
       for(int i = 0; i < length;)
       {
           if(i + 32 < length)
           {
-            memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * 32);
+            transmitSize = 32;
           }
           else
           {
-            memcpy(dataToTransmit, dataImg, sizeof(uint8_t) * (length - i));
+            transmitSize = length - i;
           }
-         if(dataToTransmit != nullptr)
-         {
-            if(nrf24.TransmitData(dataToTransmit))
-            {
-              if(i + 32 < length)
-              {
-                dataImg = dataImg + 32;
-              }
-              else
-              {
-                dataImg = dataImg + (length - i);
-              }
-              i = i + 32;
-              // sleep_ms(10);
-              // sleep_ms(50);
-            }
-
-         }
-
-        //  printf("Index: %d", i);
-    
+          if(nrf24.TransmitData(imageBuf, transmitSize))
+          {
+            imageBuf = imageBuf + transmitSize;
+            i = i + 32;
+          } 
       }
-      // printf("%.4s\n",std::to_string(length).c_str());
-      camLib.SerialUsb(imageBuf, length);
-      camLib.FreeFifoCam(imageBuf);
-      // sleep_ms(300);
-      // sleep_ms(10);
-      // sleep_ms(20);
+      // camLib.SerialUsb(imageBuf, length);
+      camLib.FreeFifoCam(dataImg);
     }
 
   }

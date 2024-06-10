@@ -26,7 +26,7 @@ class NRF24{
 		void TxMode(UINT8* address, const UINT8& channel);
 		void Set2Rx();
 		void Set2Tx();
-		bool TransmitData(UINT8* data);
+		bool TransmitData(UINT8* data, uint8_t const& dataSize);
 		void RxMode(UINT8* address, const UINT8& data);
 		bool ReceiveData(UINT8* data);
 		UINT8 IsDataAvailable(const uint8_t&);

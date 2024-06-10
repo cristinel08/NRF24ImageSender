@@ -292,9 +292,6 @@
 #define sbi(reg, bitmask) gpio_put(bitmask, 1)
 
 
-extern unsigned char usart_symbol;
-extern unsigned char usart_Command;
-
 /****************************************************************/
 /* define a structure for sensor register initialization values */
 /****************************************************************/
@@ -313,7 +310,7 @@ class ArduCAM
 {
 	public:
 	ArduCAM( void );
-	ArduCAM(byte model ,int CS);
+	ArduCAM(byte const& model ,uint8_t const& CS);
 	void InitCAM( void );
 	
 	void CS_HIGH(void);
@@ -322,49 +319,42 @@ class ArduCAM
 	void flush_fifo(void);
 	void start_capture(void);
 	void clear_fifo_flag(void);
-	uint8_t read_fifo(void);
+
 	
-	uint8_t read_reg(uint8_t addr);
-	void write_reg(uint8_t addr, uint8_t data);	
+	uint8_t read_reg(uint8_t const& addr);
+	void write_reg(uint8_t const& addr, uint8_t const& data);	
 	
 	uint32_t read_fifo_length(void);
 	void set_fifo_burst(void);
 	
-	void set_bit(uint8_t addr, uint8_t bit);
-	void clear_bit(uint8_t addr, uint8_t bit);
-	uint8_t get_bit(uint8_t addr, uint8_t bit);
-	void set_mode(uint8_t mode);
- 
-  uint8_t bus_write(int address, int value);
-	uint8_t bus_read(int address);	
+	void set_bit(uint8_t const& addr, uint8_t const& bit);
+	void clear_bit(uint8_t const& addr, uint8_t const& bit);
+	uint8_t get_bit(uint8_t const& addr, uint8_t const& bit);
  
 	// Write 8 bit values to 8 bit register address
-	int wrSensorRegs8_8(const struct sensor_reg*);
+	int wrSensorRegs8_8(struct sensor_reg const*);
 	
 	// Read/write 8 bit value to/from 8 bit register address	
-	byte wrSensorReg8_8(int regID, int regDat);
-	byte rdSensorReg8_8(uint8_t regID, uint8_t* regDat);
+	byte wrSensorReg8_8(uint8_t const& regID, uint8_t const& regDat);
+	byte rdSensorReg8_8(uint8_t const& regID, uint8_t* regDat);
 
-	void OV2640_set_JPEG_size(uint8_t size);
+	void OV2640_set_JPEG_size(uint8_t const& size);
 	
 	
-	void OV2640_set_Light_Mode(uint8_t Light_Mode);
+	void OV2640_set_Light_Mode(uint8_t const& Light_Mode);
 	
-	void OV2640_set_Color_Saturation(uint8_t Color_Saturation);
-	
-	
-	void OV2640_set_Brightness(uint8_t Brightness);
-	
-	void OV2640_set_Contrast(uint8_t Contrast);
-	
-	void OV2640_set_Special_effects(uint8_t Special_effect);	
+	void OV2640_set_Color_Saturation(uint8_t const& Color_Saturation);
 	
 	
+	void OV2640_set_Brightness(uint8_t const& Brightness);
 	
-	void set_format(byte fmt);
-	void transferBytes_(uint8_t * out, uint8_t * in, uint8_t size);
-	void transferBytes(uint8_t * out, uint8_t * in, uint32_t size);
-	inline void setDataBits(uint16_t bits);
+	void OV2640_set_Contrast(uint8_t const& Contrast);
+	
+	void OV2640_set_Special_effects(uint8_t const& Special_effect);	
+	
+	
+	
+	void set_format(byte const& fmt);
 	void Arducam_init(void);
   protected:
 	regtype *P_CS;

@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Cortex Debug",
+            "name": "Cortex Release",
             "cwd": "${workspaceRoot}",
             "executable": "${workspaceRoot}/build/ImageTransmission.elf",
             "request": "launch",

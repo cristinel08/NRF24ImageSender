@@ -180,9 +180,9 @@ NRF24::NRF24()
 	// usleep(5);
 	sleep_ms(5);
 	
-	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x1F);	//Retransmision(5, 15)
 	
-	if(ReadReg(SETUP_RETR) == 0x5F)
+	if(ReadReg(SETUP_RETR) == 0x1F)
 	{
 		disablePin(LED_BOARD);
 		sleep_ms(500);
@@ -252,7 +252,7 @@ NRF24::NRF24()
 	enablePin(LED_BOARD);
 	sleep_ms(500);
 
-	WriteReg(RF_SETUP, 0x06);	//Power 18dB, data rate = 1Mbps
+	WriteReg(RF_SETUP, 0x06);	//Power 0dB, data rate = 2Mbps
 	if(ReadReg(RF_SETUP) == 0x06)
 	{
 		disablePin(LED_BOARD);
@@ -276,7 +276,7 @@ NRF24::NRF24()
 	// #endif
 	// WriteReg(FLUSH_TX, NOP);	//RESET TX
 
-	WriteReg(CONFIG, 1 << EN_CRC | 1 << CRC0);
+	WriteReg(CONFIG, 1 << EN_CRC | ~(1 << CRC0));
 
 
 	// usleep(5000);
@@ -345,15 +345,22 @@ void NRF24::SendCommand(const UINT8& cmd)
 	enablePin(CSN_PIN);
 }
 
-bool NRF24::TransmitData(UINT8* data)
+bool NRF24::TransmitData(UINT8* data, uint8_t const& dataSize)
 {
 	//UINT8 cmd
 	//disablePin(CSN_PIN);
 	UINT8* txData = spiTx; 
 	*txData++ = W_TX_PAYLOAD;
 	Set2Tx();
-	UINT8 size = 33;
-	memcpy(txData, data, sizeof(UINT8) * 32);
+	UINT8 size = dataSize;
+	memcpy(txData, data, sizeof(UINT8) * dataSize);
+	if(dataSize < 32)
+	{
+		for(; size < 32; size++)
+		{
+			spiTx[size] = 0;
+		}
+	}
 	size = 33;
 	disablePin(CSN_PIN);
 	// verify_ = spiXfer(SPI_init_, (const UINT8&*)W_TX_PAYLOAD, nullptr, 1);
@@ -368,7 +375,7 @@ bool NRF24::TransmitData(UINT8* data)
 	//spi_write_blocking(NRF_SPI_PORT, (const UINT8*)data, 32);
 	#endif
 	enablePin(CSN_PIN);
-	gpio_put(CE_PIN, 1);
+	enablePin(CE_PIN);
 	// sleep_ms(1);
 	uint32_t timer = millis();
 	while(!(GetStatus() & ((1 << TX_DS) | (1 << MAX_RT))))
@@ -378,7 +385,7 @@ bool NRF24::TransmitData(UINT8* data)
 			return 0;
 		}
 	}
-	gpio_put(CE_PIN, 0);
+	disablePin(CE_PIN);
 	// SendCommand(NOP);
 	WriteReg(STATUS, 1 << RX_DR | 1 << TX_DS | 1 << MAX_RT);
 	if(status & (1 << MAX_RT))

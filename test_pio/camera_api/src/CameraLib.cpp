@@ -82,17 +82,19 @@ void CameraLib::StartCapture()
 		if ((vid != 0x26 ) && (( pid != 0x41 ) || ( pid != 0x42 )))
         {
 			printf("Can't find OV2640 module!");
-			sleep_ms(1000); continue;
+			sleep_ms(1000); 
+            continue;
 		}
 		else 
         {
-			printf("OV2640 detected.END"); break;
+			printf("OV2640 detected.END"); 
+            break;
 		}
   }
     //Change to JPEG capture mode and initialize the OV5642 module
     myCAM.set_format(JPEG);
     myCAM.InitCAM();
-    myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+    myCAM.OV2640_set_JPEG_size(OV2640_640x480);
     // sleep_ms(1000);
     myCAM.clear_fifo_flag();
     myCAM.OV2640_set_Special_effects(Normal);
