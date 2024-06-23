@@ -3,9 +3,11 @@ Bachellor Degree Project using nrf24l01 sending images from a raspberry pi pico 
 ## NRF24 PINOUT FOR JETSON NANO:
   NRF24   | LAYOUT
 ----------|-----------
-  CE - 18 | CSN - 16 
-SCLK - 21 |  MOSI - 19
-MISO - 23 |  IRQ -
+GND  - 20 |  VCC  - 17
+CE   - 15 |  CSN  - 24 
+SCLK - 23 |  MOSI - 19
+MISO - 21 |  IRQ  - x
+
 
 ## Must have:
   <p>1) CMake minimum version 3.10 ( enter their website and download the Unix/Linux cmake*.tar.gz):</p>

@@ -14,7 +14,7 @@ DataReceived::DataReceived()
 }
 DataReceived::~DataReceived()
 {
-    //set a bool to false then
+    //terminate the second thread
     {
         std::unique_lock<std::mutex>lk(copyMutex);
         done_ = true;
@@ -22,7 +22,6 @@ DataReceived::~DataReceived()
 
     receiveThread.join();
     jpegImg_.clear();
-    img_.release();
     populateJpeg_ = nullptr;
     
 }
@@ -38,81 +37,87 @@ void DataReceived::StartReceiving()
     );
 }
 
-void DataReceived::CopyData(char* jpegData, bool& copied)
+void DataReceived::CopyData(
+    char* jpegData, 
+    bool& copied, 
+    int& jpegSize
+)
 {
     std::unique_lock<std::mutex>lk(copyMutex);
     if(copyValue_)
     {
         memcpy(jpegData, copyJpegData_.get(), sizeof(char) * copyJpegSize_);
+        jpegSize = copyJpegSize_;
         copyValue_ = false;
         copied = true;
     }
 }
 
-void DataReceived::CopyJpgImg(int16_t& jpgImgSize)
+void DataReceived::ReceiveJpgData(int& jpgImgSize)
 {
-    {
-        std::unique_lock<std::mutex>lk(copyMutex);
-        copyJpegSize_ = jpgImgSize;
-    }
+    // nrf24_->StartTransferring();
+    int8_t receiveSize{BYTES_RECEIVED};
+    bool startFrame{false};
     while(jpgImgSize > 0)
     {
         if(nrf24_->IsDataAvailable(1))
         {	
-            jpegDataSize_ = jpegDataSize_ - BYTES_RECEIVED;
+            nrf24_->ResetRxIrq();
+            while(nrf24_->ReceiveData(populateJpeg_, receiveSize, startFrame))
+            // nrf24_->ReceiveData(populateJpeg_, receiveSize,startFrame);
+            {
+                // if(jpgImgSize==jpegDataSize_)
+                // {
+                    // if(!startFrame)
+                    {
+                        jpgImgSize = jpgImgSize - receiveSize;
+                        populateJpeg_ = populateJpeg_ + receiveSize * sizeof(char);
+                        if(jpgImgSize - receiveSize < 0)
+                        {
+                            receiveSize = jpgImgSize;
+                        }
+    
+                    }
+                    // else
+                    // {
+                    //     startFrame=false;
+                    // }
+
+                // }
+                // else
+                // {
+                //        jpgImgSize = jpgImgSize - receiveSize;
+                //        populateJpeg_ = populateJpeg_ + receiveSize * sizeof(char);
+                //        if(jpgImgSize - BYTES_RECEIVED < 0)
+                //         {
+                //             receiveSize = jpgImgSize;
+                //         }
+                        
+                        
+                // }
+            }
             
-            if(jpegDataSize_ > 0)
+            
+        }			
+    }
+        populateJpeg_ = jpegImg_.data();
+        {
+            std::unique_lock<std::mutex>lk(copyMutex);
+            if(populateJpeg_ != nullptr)
             {
-                nrf24_->ReceiveData(populateJpeg_, BYTES_RECEIVED);
-                populateJpeg_ = populateJpeg_ + BYTES_RECEIVED;
+                memcpy(copyJpegData_.get(), populateJpeg_, sizeof(char) * copyJpegSize_);
+                copyValue_ = true;
             }
-            else
-            {
-                nrf24_->ReceiveData(populateJpeg_, jpegDataSize_ + BYTES_RECEIVED);
-                populateJpeg_ = populateJpeg_ + jpegDataSize_ + BYTES_RECEIVED;
-            }
-        }					
-    }
-    populateJpeg_ = jpegImg_.data();
-    {
-        std::unique_lock<std::mutex>lk(copyMutex);
-        memcpy(copyJpegData_.get(), populateJpeg_, sizeof(char) * copyJpegSize_);
-        copyValue_ = true;
-    }
+            
+        }
 }
 
-bool DataReceived::DecodeAndSaveImg(std::vector<char>& jpegImg)
-{
-    img_ = cv::imdecode(jpegImg, cv::IMREAD_COLOR);
-    if(!img_.empty())
-    {
-        cv::imwrite("imgs/" + std::to_string(indexImg_)
-                    +".jpg", img_);
-    }
-
-    // jpegImg.clear();
-
-    return 0;
-}
-
-bool DataReceived::CheckCommand()
-{
-    bool shouldExit{false};
-    switch(cmd_)
-    {
-        case 'q':
-        case 'Q':
-            shouldExit = true;
-            break;
-        default:
-            break;
-    }
-    cmd_ = '\0';
-    return shouldExit;   
-}
 
 void DataReceived::ColectData()
 {
+    int tmpSize{};
+    int8_t receiveSize{BYTES_RECEIVED};
+    bool startFrame{false};
     while(true)
     {
         {
@@ -123,24 +128,39 @@ void DataReceived::ColectData()
             }
         }
         if(nrf24_->IsDataAvailable(1))
-		{
-            nrf24_->ReceiveData(dataRx_, BYTES_RECEIVED);
-            if(dataRx_[0] == 0x0A && dataRx_[1] == 0x0D)
+		{ 
+            nrf24_->ReceiveData(dataRx_, BYTES_RECEIVED, startFrame);
+            
+            if(startFrame)
             {
+                startFrame = false;
+                if(jpegDataSize_)
+                {
+                    for (uint16_t i{0}; i < jpegDataSize_; i++)
+                    {
+                        jpegImg_[i] = 0;
+                    }
+                }
                 jpegDataSize_ = static_cast<int>
-                    (
-                        (unsigned char)dataRx_[2] << 24 | 
-                        (unsigned char)dataRx_[3] << 16 | 
-                        (unsigned char)dataRx_[4] << 8  |
-                        (unsigned char)dataRx_[5]
-                    );
-				// jpegImg_ = std::vector<char>(jpegDataSize_);
-				populateJpeg_ = jpegImg_.data();
-                CopyJpgImg(jpegDataSize_);
-                // DecodeAndSaveImg(jpegImg_);
+                (
+                    (unsigned char)dataRx_[2] << 24 | 
+                    (unsigned char)dataRx_[3] << 16 | 
+                    (unsigned char)dataRx_[4] << 8  |
+                    (unsigned char)dataRx_[5]
+                );
+                if(jpegDataSize_ > 0)
+                {
+                    {
+                        std::unique_lock<std::mutex>lk(copyMutex);
+                        copyJpegSize_ = jpegDataSize_;
+                    }
+                    tmpSize = jpegDataSize_;
+                    receiveSize = BYTES_RECEIVED;
+                    populateJpeg_ = jpegImg_.data();                
+                    ReceiveJpgData(tmpSize);
+                }
+
             }
-
         }
-
     }
 }

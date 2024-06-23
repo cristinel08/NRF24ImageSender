@@ -19,10 +19,14 @@ class NRF24{
 		void RxMode(char* address, const char& data);
 		void Set2Tx();
 		void Set2Rx();
-		bool ReceiveData(char* data, const uint8_t& lenData);
+		bool ReceiveData(char* data, const uint8_t& lenData, bool& startFrame);
 		uint8_t IsDataAvailable(const uint8_t&);
 		void OpenWritingPipe(char* address);
 		void SendCommand(const char& cmd);
+		void StopTransferring();
+		void StartTransferring();
+		void ResetRxIrq();
+
 
 	private:
 		//variable that checks the proper
@@ -34,6 +38,9 @@ class NRF24{
 		char spiTx[33]; //32 bytes date + 1 command
 		char spiRx[33];	//32 bytes date + 1 command 
 		char status{};
+		bool receive{false};
+		bool record{false};
+		bool resetRxIrq{false};
 
 		void WriteRegMulti(const char& reg,char* data, uint8_t size);
 		void WriteReg(const char& reg, const char& data);

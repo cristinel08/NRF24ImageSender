@@ -16,12 +16,19 @@ find_library(GPIO_LIBS
 	     PATHS /usr/lib
 	     REQUIRED
 )
-
 find_package(OpenCV REQUIRED)
+
+set(3rdPartyInc
+	3rdparty/inc
+)
 
 message(STATUS "ljetgpio_LIBS = ${GPIO_LIBS}")
 message(STATUS "OpenCV_LIBS=${OpenCV_LIBS}")
-
+find_library(jpeg
+	     NAMES libjpge.a
+		 PATHS 3rdparty/lib
+	     REQUIRED
+)
 file(GLOB EXECUTABLE
 	src/*.cpp
 	inc/*.h
@@ -31,6 +38,7 @@ set(INCLUDES
    {ljetgpio_INCLUDE_DIRS}
    {OpenCV_INCLUDE_DIRS}
    ${ROOT_DIR}/inc/
+   ${3rdPartyInc}
 )
 
 add_executable(${PROJECT_NAME} ${EXECUTABLE})
@@ -43,5 +51,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 target_link_libraries(${PROJECT_NAME} "${GPIO_LIBS}")
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+
+target_link_libraries(${PROJECT_NAME} ${jpeg})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDES})

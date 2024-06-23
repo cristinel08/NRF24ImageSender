@@ -74,6 +74,7 @@ char NRF24::ReadReg (const char& reg)
 	gpioWrite(CSN_PIN,0);
 	verify_ = spiXfer(SPI_init_, cmd, spiRx, 2);
 	gpioWrite(CSN_PIN,1);
+	status=spiRx[0];
 	return spiRx[1];
 }
 void NRF24::ReadMulti(const char& reg, char* data, uint8_t size)
@@ -152,7 +153,8 @@ NRF24::NRF24()
 	usleep(5'000);
 
 	
-	WriteReg(SETUP_RETR, 0x5F);	//Retransmision(5, 15)
+	WriteReg(SETUP_RETR, 0x1F);	//Retransmision(5, 15)
+	char test=ReadReg(SETUP_RETR );
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
@@ -182,7 +184,7 @@ NRF24::NRF24()
 
 	// WriteReg(FLUSH_TX, NOP);	//RESET TX
 
-	WriteReg(CONFIG, 1 << EN_CRC | 1 << CRC0);
+	WriteReg(CONFIG, 1 << EN_CRC | ~(1 << CRC0));
 
 	usleep(5000);
 
@@ -245,7 +247,7 @@ bool NRF24::TransmitData(char* data)
 	char* txData = spiTx;
 	char* rxData = spiRx;
 	const char* current = data;
-	int size = 32 + 1;
+	uint8_t size = 32 + 1;
 	*txData++ = W_TX_PAYLOAD;
 	while(--size)
 	{
@@ -255,11 +257,8 @@ bool NRF24::TransmitData(char* data)
 	disablePin(CSN_PIN);
 	if(verify_)
 	{	
-		// std::this_thread::sleep(std::chrono::milis)
-		// std::this_thread::sleep_for(std::chrono::microseconds(1000));
 		verify_ = spiXfer(SPI_init_, spiTx, spiRx, sizeof(char) * size);
 	}
-	// usleep(1000);
 	enablePin(CSN_PIN);
 	enablePin(CE_PIN);
 	uint32_t timer = millis();
@@ -267,7 +266,7 @@ bool NRF24::TransmitData(char* data)
 	{
 		if(millis() - timer > 95)
 		{
-			return 0;
+			return false;
 		}
 	}
 	
@@ -275,24 +274,9 @@ bool NRF24::TransmitData(char* data)
 	if(status & (1 << MAX_RT))
 	{
 		SendCommand(FLUSH_TX);
-		return 0;
+		return false;
 	}
-	return 1;
-	// status = ReadReg(FIFO_STATUS);
-	// if(!(status & 1 << 4))
-	// {
-		// if (status & (1 << MAX_RT))
-		// {
-		// 	WriteReg(STATUS, 1 << MAX_RT); //clear bit MAX_RT
-		// }
-		// if (status & (1 << TX_DS))
-		// {
-		// 	WriteReg(STATUS, 1 << TX_DS);
-		// }
-	// }
-
-
-	// printf("It transmited data %32s\n", data);
+	return true;
 }
 
 char NRF24::GetStatus()
@@ -345,6 +329,7 @@ void NRF24::Set2Tx()
 		WriteReg(CONFIG, status & ~(1 << 0));
 		usleep(280);
 		enablePin(CE_PIN);
+		receive = true;
 		
 	}
 }
@@ -352,41 +337,86 @@ void NRF24::Set2Tx()
 uint8_t NRF24::IsDataAvailable(const uint8_t& pipeNr)
 {
 	Set2Rx();
+	//if (!record)
+	//{
+	//	StartTransferring();
+	//	record=true;
+	//}
+	
 
 	status = ReadReg(STATUS);
 	if ((status & (1 << RX_DR)) && 
 	    (status & (pipeNr << 1)))
 	{
-		WriteReg(STATUS, (1 << RX_DR));
+		//StopTransferring();
+		resetRxIrq=true;
+		ResetRxIrq();
+	
+		// record=false;
+
 		return 1;
 	}
 	return 0;
 }
-
-bool NRF24::ReceiveData(char* data, const uint8_t& lenData)
+void NRF24::StopTransferring()
 {
-	char* currentData = data;
-	char* txData = spiTx;
-	char* rxData = spiRx;
-	int size = 33;
-	*txData++ = R_RX_PAYLOAD;
-	while (--size)
-	{
-		*txData++ = NOP;
-	}
-	size = 32 + 1;
-	disablePin(CSN_PIN);
-	verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
-	enablePin(CSN_PIN);
-	status = *rxData++;
-	memcpy(data, rxData,sizeof(char)*lenData);
-	
-
-	status = ReadReg(FIFO_STATUS);
-	// SendCommand(NOP);
-	return!(status & (1 << 0));
+	disablePin(CE_PIN);
 }
+void NRF24::StartTransferring()
+{
+	enablePin(CE_PIN);
+}
+bool NRF24::ReceiveData(char* data, const uint8_t& lenData, bool& startFrame)
+{
+	char fifoStatus{};
+	fifoStatus = ReadReg(FIFO_STATUS);
+	if(!(fifoStatus &(1 << 0)))
+	{
+		char* txData = spiTx;
+		char* rxData = spiRx;
 
+		int size = 33;
+		*txData++ = R_RX_PAYLOAD;
+		while (--size)
+		{
+			*txData++ = NOP;
+		}
+		size = 32 + 1;
+
+		disablePin(CSN_PIN);
+		verify_ = spiXfer(SPI_init_, spiTx, spiRx, size);
+		enablePin(CSN_PIN);
+		status = *rxData++;
+		if(*rxData == 0x0a && *(rxData+1)==0x0d)
+		{
+			startFrame = true;
+		}
+
+		memcpy(data, rxData,sizeof(char)*lenData);
+
+	}
+	else
+	{
+	//power up the device in RX mode
+		//if (!record)
+		//{
+		//	StartTransferring();
+		//	record=true;
+		//}
+		
+		
+	}
+		
+	return!(fifoStatus & (1 << 0));	
+}
+void NRF24::ResetRxIrq()
+{
+    if(resetRxIrq)
+	{
+		resetRxIrq=false;       
+    	WriteReg(STATUS, (1 << RX_DR)|( 1 << TX_DS )|(1 << MAX_RT) );  
+ 	}
+} 
 
 
 
