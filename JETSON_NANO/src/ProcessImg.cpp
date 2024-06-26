@@ -1,7 +1,7 @@
 #include "ProcessImg.h"
 
 ProcessImg::ProcessImg(
-
+    void
 ) : 
     img_                { },
     upScaleImg_         { },
@@ -23,7 +23,9 @@ ProcessImg::ProcessImg(
         jpegReceive_.emplace_back(0);
     }
 }
-void ProcessImg::StartProcess()
+void ProcessImg::StartProcess(
+    void
+)
 {
     bool copied { false };
 	reveiveData_->StartReceiving();
@@ -59,64 +61,16 @@ void ProcessImg::StartProcess()
 	}
 }
 
-void ProcessImg::DisplayAndCheckCmd()
+void ProcessImg::DisplayAndCheckCmd(
+    void
+)
 {
     if(!img_.empty())
     {
-        //BiliniarInterpol(img_, upScaleImg_, 1.5f);
         cv::putText(img_,std::to_string(fps_), cv::Point(10, 15), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255, 255, 255));
         cv::imshow("ImageReceived", img_);
         cmd_ = cv::waitKey(1);
         CheckCommand();
-    }
-}
-
-void ProcessImg::BiliniarInterpol(
-    const cv::Mat& inputImage, 
-    cv::Mat& outImg, 
-    double scaleFactor
-) 
-{
-    // Get dimensions of the input image
-    int originalHeight = inputImage.rows;
-    int originalWidth = inputImage.cols;
-    int numChannels = inputImage.channels();
-
-    // Calculate dimensions of the new image
-    int newHeight = static_cast<int>(originalHeight * scaleFactor);
-    int newWidth = static_cast<int>(originalWidth * scaleFactor);
-
-    // Initialize the new image
-    if(outImg.empty())
-    {
-        outImg = cv::Mat(newHeight, newWidth, inputImage.type());
-    }
-    for (int i = 0; i < newHeight; ++i) {
-        for (int j = 0; j < newWidth; ++j) {
-            // Map the coordinates of the new image to the original image
-            float x = i / scaleFactor;
-            float y = j / scaleFactor;
-
-            // Get the coordinates of the four surrounding pixels
-            int x1 = static_cast<int>(x);
-            int x2 = std::min(x1 + 1, originalHeight - 1);
-            int y1 = static_cast<int>(y);
-            int y2 = std::min(y1 + 1, originalWidth - 1);
-
-            // Calculate the distances between the points
-            float a = x - x1;
-            float b = y - y1;
-
-            // Perform bilinear interpolation for each channel
-            for (int c = 0; c < numChannels; ++c) {
-                float value = (1 - a) * (1 - b) * inputImage.at<cv::Vec3b>(x1, y1)[c] +
-                              a * (1 - b) * inputImage.at<cv::Vec3b>(x2, y1)[c] +
-                              (1 - a) * b * inputImage.at<cv::Vec3b>(x1, y2)[c] +
-                              a * b * inputImage.at<cv::Vec3b>(x2, y2)[c];
-
-                outImg.at<cv::Vec3b>(i, j)[c] = static_cast<uchar>(value);
-            }
-        }
     }
 }
 

@@ -1,6 +1,8 @@
 #include "DataReceived.h"
 
-DataReceived::DataReceived()
+DataReceived::DataReceived(
+    void
+)
 {
     copyJpegData_ = std::make_unique<uint8_t[]>(UINT16_MAX);
     jpegImg_.reserve(UINT16_MAX);
@@ -12,7 +14,9 @@ DataReceived::DataReceived()
     nrf24_->RxMode((uint8_t*)rxAddress_, channel_);
 	nrf24_->OpenWritingPipe((uint8_t*)txAddress_);
 }
-DataReceived::~DataReceived()
+DataReceived::~DataReceived(
+    void
+)
 {
     //terminate the second thread
     {
@@ -26,7 +30,9 @@ DataReceived::~DataReceived()
     
 }
 
-void DataReceived::StartReceiving()
+void DataReceived::StartReceiving(
+    void
+)
 {
     receiveThread = std::thread
     (
@@ -57,7 +63,6 @@ void DataReceived::ReceiveJpgData(
     int& jpgImgSize
 )
 {
-    // nrf24_->StartTransferring();
     int8_t receiveSize{BYTES_RECEIVED};
     bool startFrame{false};
     while(jpgImgSize > 0)
