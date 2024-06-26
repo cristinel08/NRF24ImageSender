@@ -16,22 +16,29 @@ find_library(GPIO_LIBS
 	     PATHS /usr/lib
 	     REQUIRED
 )
-
 find_package(OpenCV REQUIRED)
+
+set(3rdPartyInc
+	3rdparty/inc
+)
 
 message(STATUS "ljetgpio_LIBS = ${GPIO_LIBS}")
 message(STATUS "OpenCV_LIBS=${OpenCV_LIBS}")
-
-set(EXECUTABLE
-	${ROOT_DIR}/src/RF24.cpp
-	${ROOT_DIR}/inc/RF24.h
-	#${ljetgpio_INCLUDE_DIRS}/jetgpio.h
+find_library(jpeg
+	     NAMES libjpge.a
+		 PATHS 3rdparty/lib
+	     REQUIRED
+)
+file(GLOB EXECUTABLE
+	src/*.cpp
+	inc/*.h
 )
 
 set(INCLUDES
    {ljetgpio_INCLUDE_DIRS}
    {OpenCV_INCLUDE_DIRS}
    ${ROOT_DIR}/inc/
+   ${3rdPartyInc}
 )
 
 add_executable(${PROJECT_NAME} ${EXECUTABLE})
@@ -39,9 +46,12 @@ add_executable(${PROJECT_NAME} ${EXECUTABLE})
 #target_compile_definitions(${PROJECT_NAME} PUBLIC RF24_NO_INTERRUPT)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 target_link_libraries(${PROJECT_NAME} "${GPIO_LIBS}")
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+
+target_link_libraries(${PROJECT_NAME} ${jpeg})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDES})

@@ -1,12 +1,4 @@
-#include<jetgpio.h>
-#include<iostream>
-#include<string.h>
-#include <unistd.h>
-#include<memory>
 #pragma once
-#ifndef INC_RF24_H_
-#define INC_RF24_H_
-
 
 /* Memory Map */
 #define CONFIG      0x00
@@ -44,39 +36,20 @@
 #define R_RX_PL_WID   0x60
 #define R_RX_PAYLOAD  0x61
 #define W_TX_PAYLOAD  0xA0
+#define W_TX_NOACK    0xB0
 #define W_ACK_PAYLOAD 0xA8
 #define FLUSH_TX      0xE1
 #define FLUSH_RX      0xE2
 #define REUSE_TX_PL   0xE3
 #define NOP           0xFF
 
-#define CE_PIN 		18
-#define CSN_PIN 	16
+#define ARD 		4
+#define RX_DR 		6
+#define TX_DS		5
+#define MAX_RT 		4
+#define EN_CRC		3
+#define CRC0		2
+#define PWR_UP		1
 
-
-#endif /* INC_RF24_H_ */
-class NRF24{
-	public:
-		NRF24();
-		void enablePin(int pin);
-		void disablePin(int pin);
-		void TxMode(char* address,char  channel);
-		void TransmitData(char* data);
-		void RxMode(char* address,char data);
-		void ReceiveData(char* data);
-		uint8_t IsDataAvailable(int);
-
-	private:
-		//variable that checks the proper
-		//use for functions in the jetson
-		//lib
-		int init_;
-		int SPI_init_;
-		int verify_;
-
-		void WriteRegMulti(char reg,char* data,int size);
-		void SendCommand(char cmd);
-		void WriteReg(char reg,char data);
-		char ReadReg(char reg);
-		void ReadMulti(char reg,char* data,int size);
-};
+#define CE_PIN 		15
+#define CSN_PIN 	24
