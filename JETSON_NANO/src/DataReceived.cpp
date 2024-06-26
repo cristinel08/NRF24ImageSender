@@ -2,15 +2,15 @@
 
 DataReceived::DataReceived()
 {
-    copyJpegData_ = std::make_unique<char[]>(UINT16_MAX);
+    copyJpegData_ = std::make_unique<uint8_t[]>(UINT16_MAX);
     jpegImg_.reserve(UINT16_MAX);
     for(uint16_t i = 0; i < UINT16_MAX; i++)
     {
         jpegImg_.emplace_back(0);
     }
     nrf24_ = std::make_unique<NRF24>();
-    nrf24_->RxMode(rxAddress_, channel_);
-	nrf24_->OpenWritingPipe(txAddress_);
+    nrf24_->RxMode((uint8_t*)rxAddress_, channel_);
+	nrf24_->OpenWritingPipe((uint8_t*)txAddress_);
 }
 DataReceived::~DataReceived()
 {
@@ -38,7 +38,7 @@ void DataReceived::StartReceiving()
 }
 
 void DataReceived::CopyData(
-    char* jpegData, 
+    uint8_t* jpegData, 
     bool& copied, 
     int& jpegSize
 )
@@ -46,14 +46,16 @@ void DataReceived::CopyData(
     std::unique_lock<std::mutex>lk(copyMutex);
     if(copyValue_)
     {
-        memcpy(jpegData, copyJpegData_.get(), sizeof(char) * copyJpegSize_);
+        memcpy(jpegData, copyJpegData_.get(), sizeof(uint8_t) * copyJpegSize_);
         jpegSize = copyJpegSize_;
         copyValue_ = false;
         copied = true;
     }
 }
 
-void DataReceived::ReceiveJpgData(int& jpgImgSize)
+void DataReceived::ReceiveJpgData(
+    int& jpgImgSize
+)
 {
     // nrf24_->StartTransferring();
     int8_t receiveSize{BYTES_RECEIVED};
@@ -64,56 +66,29 @@ void DataReceived::ReceiveJpgData(int& jpgImgSize)
         {	
             nrf24_->ResetRxIrq();
             while(nrf24_->ReceiveData(populateJpeg_, receiveSize, startFrame))
-            // nrf24_->ReceiveData(populateJpeg_, receiveSize,startFrame);
             {
-                // if(jpgImgSize==jpegDataSize_)
-                // {
-                    // if(!startFrame)
-                    {
-                        jpgImgSize = jpgImgSize - receiveSize;
-                        populateJpeg_ = populateJpeg_ + receiveSize * sizeof(char);
-                        if(jpgImgSize - receiveSize < 0)
-                        {
-                            receiveSize = jpgImgSize;
-                        }
-    
-                    }
-                    // else
-                    // {
-                    //     startFrame=false;
-                    // }
-
-                // }
-                // else
-                // {
-                //        jpgImgSize = jpgImgSize - receiveSize;
-                //        populateJpeg_ = populateJpeg_ + receiveSize * sizeof(char);
-                //        if(jpgImgSize - BYTES_RECEIVED < 0)
-                //         {
-                //             receiveSize = jpgImgSize;
-                //         }
-                        
-                        
-                // }
-            }
-            
-            
+                jpgImgSize = jpgImgSize - receiveSize;
+                populateJpeg_ = populateJpeg_ + receiveSize * sizeof(uint8_t);
+                if(jpgImgSize - receiveSize < 0)
+                {
+                    receiveSize = jpgImgSize;
+                }
+            }            
         }			
     }
         populateJpeg_ = jpegImg_.data();
+        if(populateJpeg_ != nullptr)
         {
             std::unique_lock<std::mutex>lk(copyMutex);
-            if(populateJpeg_ != nullptr)
-            {
-                memcpy(copyJpegData_.get(), populateJpeg_, sizeof(char) * copyJpegSize_);
-                copyValue_ = true;
-            }
-            
+            memcpy(copyJpegData_.get(), populateJpeg_, sizeof(uint8_t) * copyJpegSize_);
+            copyValue_ = true;            
         }
 }
 
 
-void DataReceived::ColectData()
+void DataReceived::ColectData(
+    void
+)
 {
     int tmpSize{};
     int8_t receiveSize{BYTES_RECEIVED};
@@ -143,10 +118,10 @@ void DataReceived::ColectData()
                 }
                 jpegDataSize_ = static_cast<int>
                 (
-                    (unsigned char)dataRx_[2] << 24 | 
-                    (unsigned char)dataRx_[3] << 16 | 
-                    (unsigned char)dataRx_[4] << 8  |
-                    (unsigned char)dataRx_[5]
+                    (unsigned uint8_t)dataRx_[2] << 24 | 
+                    (unsigned uint8_t)dataRx_[3] << 16 | 
+                    (unsigned uint8_t)dataRx_[4] << 8  |
+                    (unsigned uint8_t)dataRx_[5]
                 );
                 if(jpegDataSize_ > 0)
                 {

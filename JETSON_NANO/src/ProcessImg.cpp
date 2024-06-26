@@ -121,7 +121,7 @@ void ProcessImg::BiliniarInterpol(
 }
 
 void ProcessImg::DecompressJpeg(
-    char* jpegImg
+    uint8_t* jpegImg
 )
 {
     uint8_t* data = jpgd::decompress_jpeg_image_from_memory(

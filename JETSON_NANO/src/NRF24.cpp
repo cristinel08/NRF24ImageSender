@@ -8,7 +8,9 @@ uint32_t millis()
 	return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
 //write a single byte
-NRF24::~NRF24()
+NRF24::~NRF24(
+	void
+)
 {
 	disablePin(CE_PIN);
 	WriteReg(CONFIG, 0x00);
@@ -16,18 +18,19 @@ NRF24::~NRF24()
 	disablePin(CSN_PIN);
 	gpioTerminate();
 }
-void NRF24::WriteReg (const char& reg, const char& data)
+void NRF24::WriteReg (
+	const uint8_t& reg, 
+	const uint8_t& data
+)
 {
-	char buf[2];
+	uint8_t buf[2];
 	buf[0] = W_REGISTER | reg;//|1<<5;
 	buf[1] = data;
-	char readStatus[2]{};
-	// char cmd = W_REGISTER;
+	uint8_t readStatus[2]{};
+	// uint8_t cmd = W_REGISTER;
 	
 	//pentru a selecta
 	disablePin(CSN_PIN);
-	// verify_ = spiXfer(SPI_init_, &cmd, nullptr, 1);
-	// usleep(10);
 	if(verify_)
 	{
 		verify_ = spiXfer(SPI_init_, buf, readStatus, 2);
@@ -42,11 +45,15 @@ void NRF24::WriteReg (const char& reg, const char& data)
 	enablePin(CSN_PIN);
 }
 //write multiple datas
-void NRF24::WriteRegMulti(const char& reg, char* data, uint8_t size)
+void NRF24::WriteRegMulti(
+	const uint8_t& reg, 
+	uint8_t* data, 
+	uint8_t size
+)
 {
 	disablePin(CSN_PIN);
-	char* rxData = spiRx;
-	char* txData = spiTx;
+	uint8_t* rxData = spiRx;
+	uint8_t* txData = spiTx;
 	uint8_t lenData = size + 1; //32 bytes data + 1 byte command
 	
 	*txData++ = W_REGISTER | (REGISTER_MASK & reg);
@@ -63,11 +70,13 @@ void NRF24::WriteRegMulti(const char& reg, char* data, uint8_t size)
 	enablePin(CSN_PIN);
 }
 //read 1 byte
-char NRF24::ReadReg (const char& reg)
+uint8_t NRF24::ReadReg (
+	const uint8_t& reg
+)
 {
-	char data='0';
-	char spiRx[32]{};
-	char cmd[2]{};
+	uint8_t data='0';
+	uint8_t spiRx[32]{};
+	uint8_t cmd[2]{};
 	cmd[0] = R_REGISTER | reg;
 	cmd[1] = NOP;
 	//pentru a selecta dispozitivul
@@ -77,12 +86,14 @@ char NRF24::ReadReg (const char& reg)
 	status=spiRx[0];
 	return spiRx[1];
 }
-void NRF24::ReadMulti(const char& reg, char* data, uint8_t size)
+void NRF24::ReadMulti(
+	const uint8_t& reg, 
+	uint8_t* data, uint8_t size
+)
 {	
 	//pentru a selecta dispozitivul
-	// char cmd = R_REGISTER | reg;
-	char* txData = spiTx;
-	char* rxData = spiRx;
+	uint8_t* txData = spiTx;
+	uint8_t* rxData = spiRx;
 	int lenData = size + 1; // 32 data + 1 command
 	*txData = R_REGISTER | reg;
 	while (size--)
@@ -99,7 +110,9 @@ void NRF24::ReadMulti(const char& reg, char* data, uint8_t size)
 	enablePin(CSN_PIN);
 }
 
-NRF24::NRF24()
+NRF24::NRF24(
+	void
+)
 {
 	init_ = gpioInitialise();
 	if(init_ < 0)
@@ -154,7 +167,6 @@ NRF24::NRF24()
 
 	
 	WriteReg(SETUP_RETR, 0x1F);	//Retransmision(5, 15)
-	char test=ReadReg(SETUP_RETR );
 
 	WriteReg(DYNPD, 0x00);	//disable dynamic payload
 
@@ -175,14 +187,8 @@ NRF24::NRF24()
 	WriteReg(RF_SETUP, 0x06);	//Power 0dB, data rate = 1Mbps
 	
 	WriteReg(STATUS, 0x70);
-
-	// WriteReg(FLUSH_RX, NOP);	//RESET RX
 	SendCommand(FLUSH_RX);
-	// SendCommand(NOP);
 	SendCommand(FLUSH_TX);
-	// SendCommand(NOP);
-
-	// WriteReg(FLUSH_TX, NOP);	//RESET TX
 
 	WriteReg(CONFIG, 1 << EN_CRC | ~(1 << CRC0));
 
@@ -190,26 +196,34 @@ NRF24::NRF24()
 
 	enablePin(CE_PIN);
 	enablePin(CSN_PIN);
-	// disablePin(CSN_PIN);
 }
 
-void NRF24::enablePin(const uint8_t& pin)
+void NRF24::enablePin(
+	const uint8_t& pin
+)
 {
 	gpioWrite(pin, 1);
 	usleep(5);
 }
 
-void NRF24::disablePin(const uint8_t& pin)
+void NRF24::disablePin(
+	const uint8_t& pin
+)
 {
 	gpioWrite(pin,0);
 	usleep(5);
 }
-void NRF24::OpenWritingPipe(char* address)
+void NRF24::OpenWritingPipe(
+	uint8_t* address
+)
 {
 	WriteRegMulti(RX_ADDR_P0, address, 5);
 	WriteRegMulti(TX_ADDR, address, 5);
 }
-void NRF24::TxMode(char* address, const char& channel)
+void NRF24::TxMode(
+	uint8_t* address, 
+	const uint8_t& channel
+)
 {
 	disablePin(CE_PIN);
 	//enablePin(CSN_PIN);
@@ -222,7 +236,7 @@ void NRF24::TxMode(char* address, const char& channel)
 	WriteRegMulti(TX_ADDR, address, 5);
 	
 	//power up the device 
-	char config = ReadReg(CONFIG);
+	uint8_t config = ReadReg(CONFIG);
 	config = config | (1 << 1);
 	WriteReg(CONFIG, config);
 
@@ -231,22 +245,26 @@ void NRF24::TxMode(char* address, const char& channel)
 	//disablePin(CSN_PIN);
 }	
 
-void NRF24::SendCommand(const char& cmd)
+void NRF24::SendCommand(
+	const uint8_t& cmd
+)
 {
-	char buf[1]{cmd};
+	uint8_t buf[1]{cmd};
 	disablePin(CSN_PIN);
 	verify_ = spiXfer(SPI_init_, buf, nullptr, 1);
 	enablePin(CSN_PIN);
 }
 
-bool NRF24::TransmitData(char* data)
+bool NRF24::TransmitData(
+	uint8_t* data
+)
 {
 
 	Set2Tx();
 	disablePin(CE_PIN);
-	char* txData = spiTx;
-	char* rxData = spiRx;
-	const char* current = data;
+	uint8_t* txData = spiTx;
+	uint8_t* rxData = spiRx;
+	const uint8_t* current = data;
 	uint8_t size = 32 + 1;
 	*txData++ = W_TX_PAYLOAD;
 	while(--size)
@@ -257,7 +275,7 @@ bool NRF24::TransmitData(char* data)
 	disablePin(CSN_PIN);
 	if(verify_)
 	{	
-		verify_ = spiXfer(SPI_init_, spiTx, spiRx, sizeof(char) * size);
+		verify_ = spiXfer(SPI_init_, spiTx, spiRx, sizeof(uint8_t) * size);
 	}
 	enablePin(CSN_PIN);
 	enablePin(CE_PIN);
@@ -279,13 +297,18 @@ bool NRF24::TransmitData(char* data)
 	return true;
 }
 
-char NRF24::GetStatus()
+uint8_t NRF24::GetStatus(
+	void
+)
 {
 	WriteReg(NOP, NOP);
 	return status;
 }
 
-void NRF24::RxMode(char* address, const char& channel)
+void NRF24::RxMode(
+	uint8_t* address, 
+	const uint8_t& channel
+)
 {
 	disablePin(CE_PIN);
 	//select the channel
@@ -308,7 +331,9 @@ void NRF24::RxMode(char* address, const char& channel)
 	enablePin(CE_PIN);
 }	
 
-void NRF24::Set2Rx()
+void NRF24::Set2Rx(
+	void
+)
 {
 	status = ReadReg(CONFIG);
 	if (status % 2 == 0)
@@ -320,7 +345,9 @@ void NRF24::Set2Rx()
 	}
 }
 
-void NRF24::Set2Tx()
+void NRF24::Set2Tx(
+	void
+)
 {
 	status = ReadReg(CONFIG);
 	if (status % 2)
@@ -337,43 +364,40 @@ void NRF24::Set2Tx()
 uint8_t NRF24::IsDataAvailable(const uint8_t& pipeNr)
 {
 	Set2Rx();
-	//if (!record)
-	//{
-	//	StartTransferring();
-	//	record=true;
-	//}
-	
-
 	status = ReadReg(STATUS);
 	if ((status & (1 << RX_DR)) && 
 	    (status & (pipeNr << 1)))
 	{
-		//StopTransferring();
 		resetRxIrq=true;
 		ResetRxIrq();
-	
-		// record=false;
-
 		return 1;
 	}
 	return 0;
 }
-void NRF24::StopTransferring()
+void NRF24::StopTransferring(
+	void
+)
 {
 	disablePin(CE_PIN);
 }
-void NRF24::StartTransferring()
+void NRF24::StartTransferring(
+	void
+)
 {
 	enablePin(CE_PIN);
 }
-bool NRF24::ReceiveData(char* data, const uint8_t& lenData, bool& startFrame)
+bool NRF24::ReceiveData(
+	uint8_t* data, 
+	const uint8_t& lenData, 
+	bool& startFrame
+)
 {
-	char fifoStatus{};
+	uint8_t fifoStatus{};
 	fifoStatus = ReadReg(FIFO_STATUS);
 	if(!(fifoStatus &(1 << 0)))
 	{
-		char* txData = spiTx;
-		char* rxData = spiRx;
+		uint8_t* txData = spiTx;
+		uint8_t* rxData = spiRx;
 
 		int size = 33;
 		*txData++ = R_RX_PAYLOAD;
@@ -392,24 +416,14 @@ bool NRF24::ReceiveData(char* data, const uint8_t& lenData, bool& startFrame)
 			startFrame = true;
 		}
 
-		memcpy(data, rxData,sizeof(char)*lenData);
+		memcpy(data, rxData,sizeof(uint8_t)*lenData);
 
-	}
-	else
-	{
-	//power up the device in RX mode
-		//if (!record)
-		//{
-		//	StartTransferring();
-		//	record=true;
-		//}
-		
-		
-	}
-		
+	}		
 	return!(fifoStatus & (1 << 0));	
 }
-void NRF24::ResetRxIrq()
+void NRF24::ResetRxIrq(
+	void
+)
 {
     if(resetRxIrq)
 	{

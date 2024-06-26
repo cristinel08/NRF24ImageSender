@@ -11,7 +11,9 @@
 class ProcessImg
 {
 public:
-    ProcessImg();
+    ProcessImg(
+        void
+    );
     ~ProcessImg() = default;
     void StartProcess(
         void
@@ -19,7 +21,7 @@ public:
 private:
     static constexpr int const CHANNELS         { 3 }; // request RGB image
     void DecompressJpeg(
-        char* jpegImg
+        uint8_t* jpegImg
     );
     void SaveJpegImg(
         uint8_t* jpegImg
@@ -30,7 +32,7 @@ private:
         double scaleFactor
     );
     void ConvertRGB2BGR(
-        uchar* data,
+        uint8_t* data,
         uint   dataSize
     );
     void CheckCommand(
@@ -39,7 +41,7 @@ private:
     void DisplayAndCheckCmd(
         void
     );
-    std::vector<char>jpegReceive_;
+    std::vector<uint8_t>jpegReceive_;
     // std::ofstream imgsSaved_;
     FILE* imgsSaved_;
 	cv::Mat img_;
@@ -49,7 +51,7 @@ private:
     int height_;
     int actualChannels_;
     std::unique_ptr<DataReceived> reveiveData_;
-    char cmd_;
+    uint8_t cmd_;
     bool shouldExit_;
     bool record_;
     uint8_t fps_;
