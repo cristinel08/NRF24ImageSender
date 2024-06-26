@@ -4,52 +4,37 @@
 #include "pico/binary_info.h"
 #include "ov2640.h"
 
-ArduCAM::ArduCAM()
+ArduCamOv2640::ArduCamOv2640(
+	void
+)
 {
   sensor_model = OV2640;
   sensor_addr = 0x30;
 }
-ArduCAM::ArduCAM(byte const& model ,uint8_t const& CS)
-{
-	B_CS = CS;
-	*P_CS=CS;
-  	sbi(P_CS, B_CS);
-	sensor_model = model;
-	switch (sensor_model)
-	{
-    case OV2640:
-      	sensor_addr = 0x30;
-    break;
-     case OV5642:
-      	sensor_addr = 0x3C;
-    break;
-		default:
-		  sensor_addr = 0x60;
-		break;
-	}	
-}
 
-void ArduCAM::InitCAM()
+void ArduCamOv2640::InitCAM(
+	void
+)
 {
  
   switch (sensor_model)
   {
     case OV2640:
-        wrSensorReg8_8(0xff, 0x01);
-        wrSensorReg8_8(0x12, 0x80);
+        WriteI2cReg(0xff, 0x01);
+        WriteI2cReg(0x12, 0x80);
         sleep_ms(100);
         if (m_fmt == JPEG)
         {
-          wrSensorRegs8_8(OV2640_JPEG_INIT);
-          wrSensorRegs8_8(OV2640_YUV422);
-          wrSensorRegs8_8(OV2640_JPEG);
-          wrSensorReg8_8(0xff, 0x01);
-          wrSensorReg8_8(0x15, 0x00);
-		  wrSensorRegs8_8(OV2640_1600x1200_JPEG);
+          WriteI2cRegMulti(OV2640_JPEG_INIT);
+          WriteI2cRegMulti(OV2640_YUV422);
+          WriteI2cRegMulti(OV2640_JPEG);
+          WriteI2cReg(0xff, 0x01);
+          WriteI2cReg(0x15, 0x00);
+		  WriteI2cRegMulti(OV2640_1600x1200_JPEG);
         }
         else
         {
-          wrSensorRegs8_8(OV2640_QVGA);
+          WriteI2cRegMulti(OV2640_QVGA);
         }
         break;
     default:
@@ -57,32 +42,44 @@ void ArduCAM::InitCAM()
   }
 }
 
-void ArduCAM::CS_HIGH(void)
+void ArduCamOv2640::CS_HIGH(
+	void
+)
 {
 	 sbi(P_CS, B_CS);	
 }
-void ArduCAM::CS_LOW(void)
+void ArduCamOv2640::CS_LOW(
+	void
+)
 {
 	 cbi(P_CS, B_CS);	
 }
 
-void ArduCAM::flush_fifo(void)
+void ArduCamOv2640::FlushFifo(
+	void
+)
 {
-	write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK);
+	WriteSpiReg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK);
 }
 
-void ArduCAM::start_capture(void)
+void ArduCamOv2640::StartCapture(
+	void
+)
 {
-	write_reg(ARDUCHIP_FIFO, FIFO_START_MASK);
+	WriteSpiReg(ARDUCHIP_FIFO, FIFO_START_MASK);
 }
 
 
-void ArduCAM::clear_fifo_flag(void )
+void ArduCamOv2640::ClearFifoFlag(
+	void
+)
 {
-	write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK);
+	WriteSpiReg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK);
 }
 
-uint8_t ArduCAM::read_reg(uint8_t const& addr)
+uint8_t ArduCamOv2640::ReadSpiReg(
+	uint8_t const& addr
+)
 {
   	uint8_t value = addr& 0x7f;
   	cbi(P_CS, B_CS);
@@ -94,7 +91,10 @@ uint8_t ArduCAM::read_reg(uint8_t const& addr)
 
 
 
-void ArduCAM::write_reg(uint8_t const& addr, uint8_t const& data)
+void ArduCamOv2640::WriteSpiReg(
+	uint8_t const& addr, 
+	uint8_t const& data
+)
 {
     uint8_t buf[2];
     buf[0] = addr|WRITE_BIT ;  // remove read bit as this is a write
@@ -102,49 +102,61 @@ void ArduCAM::write_reg(uint8_t const& addr, uint8_t const& data)
     cbi(P_CS, B_CS);
     spi_write_blocking(SPI_PORT, buf, 2);
     sbi(P_CS, B_CS);
-    // sleep_ms(1); 
 }
 
 
-uint32_t ArduCAM::read_fifo_length(void)
+uint32_t ArduCamOv2640::ReadFifoLength(
+	void
+)
 {
 	uint32_t len1,len2,len3,length=0;
-	len1 = read_reg(FIFO_SIZE1);
-  	len2 = read_reg(FIFO_SIZE2);
-  	len3 = read_reg(FIFO_SIZE3) & 0x7f;
+	len1 = ReadSpiReg(FIFO_SIZE1);
+  	len2 = ReadSpiReg(FIFO_SIZE2);
+  	len3 = ReadSpiReg(FIFO_SIZE3) & 0x7f;
   	length = ((len3 << 16) | (len2 << 8) | len1) & 0x07fffff;
 	return length;	
 }
 
-void ArduCAM::set_fifo_burst()
+void ArduCamOv2640::SetFifoBurst(
+	void
+)
 {
     uint8_t value;
     spi_read_blocking(SPI_PORT, BURST_FIFO_READ, &value, 1);	
 }
 
 //Set corresponding bit  
-void ArduCAM::set_bit(uint8_t const& addr, uint8_t const& bit)
+void ArduCamOv2640::SetBit(
+	uint8_t const& addr, 
+	uint8_t const& bit
+)
 {
 	uint8_t temp;
-	temp = read_reg(addr);
-	write_reg(addr, temp | bit);
+	temp = ReadSpiReg(addr);
+	WriteSpiReg(addr, temp | bit);
 }
 
 
 //Clear corresponding bit 
-void ArduCAM::clear_bit(uint8_t const& addr, uint8_t const& bit)
+void ArduCamOv2640::ClearBit(
+	uint8_t const& addr, 
+	uint8_t const& bit
+)
 {
 	uint8_t temp;
-	temp = read_reg(addr);
-	write_reg(addr, temp & (~bit));
+	temp = ReadSpiReg(addr);
+	WriteSpiReg(addr, temp & (~bit));
 }
 
 
 //Get corresponding bit status
-uint8_t ArduCAM::get_bit(uint8_t const& addr, uint8_t const& bit)
+uint8_t ArduCamOv2640::GetBit(
+	uint8_t const& addr, 
+	uint8_t const& bit
+)
 {
   uint8_t temp;
-  temp = read_reg(addr);
+  temp = ReadSpiReg(addr);
   temp = temp & bit;
   return temp;
 }
@@ -153,7 +165,9 @@ uint8_t ArduCAM::get_bit(uint8_t const& addr, uint8_t const& bit)
 
 
 	// Write 8 bit values to 8 bit register address
-int ArduCAM::wrSensorRegs8_8(struct sensor_reg const reglist[])
+void ArduCamOv2640::WriteI2cRegMulti(
+	struct sensor_reg const reglist[]
+)
 {
 	  uint16_t reg_addr = 0;
 	  uint16_t reg_val = 0;
@@ -162,339 +176,414 @@ int ArduCAM::wrSensorRegs8_8(struct sensor_reg const reglist[])
 	  {
 	    reg_addr = next->reg;
 	    reg_val = next->val;
-	    wrSensorReg8_8(reg_addr, reg_val);
+	    WriteI2cReg(reg_addr, reg_val);
 	    next++;
 	  }
-	return 1;
 }
 
 // Read/write 8 bit value to/from 8 bit register address	
-byte ArduCAM::wrSensorReg8_8(uint8_t const& regID, uint8_t const& regDat)
+void ArduCamOv2640::WriteI2cReg(
+	uint8_t const& regID, 
+	uint8_t const& regDat
+)
 {
 	uint8_t buf[2];
     buf[0] = regID;
     buf[1] = regDat;
-    i2c_write_blocking(I2C_PORT, sensor_addr, buf,  2, true );
-	return 1;
-	
+    i2c_write_blocking(I2C_PORT, sensor_addr, buf,  2, true );	
 }
 
-void ArduCAM::OV2640_set_Special_effects(uint8_t const& Special_effect)
+void ArduCamOv2640::SetSpecialEffects(
+	uint8_t const& Special_effect
+)
 {
 	switch(Special_effect)
 	{
 		case Antique:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x18);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x40);
-			wrSensorReg8_8(0x7d, 0xa6);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x18);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x40);
+			WriteI2cReg(0x7d, 0xa6);
 			break;
 		case Bluish:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x18);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0xa0);
-			wrSensorReg8_8(0x7d, 0x40);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x18);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0xa0);
+			WriteI2cReg(0x7d, 0x40);
 			break;
 		case Greenish:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x18);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x40);
-			wrSensorReg8_8(0x7d, 0x40);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x18);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x40);
+			WriteI2cReg(0x7d, 0x40);
 			break;
 		case Reddish:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x18);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x40);
-			wrSensorReg8_8(0x7d, 0xc0);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x18);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x40);
+			WriteI2cReg(0x7d, 0xc0);
 			break;
 		case BW:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x18);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x80);
-			wrSensorReg8_8(0x7d, 0x80);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x18);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x80);
+			WriteI2cReg(0x7d, 0x80);
 			break;
 		case Negative:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x40);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x80);
-			wrSensorReg8_8(0x7d, 0x80);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x40);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x80);
+			WriteI2cReg(0x7d, 0x80);
 			break;
 		case BWnegative:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x58);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x80);
-			wrSensorReg8_8(0x7d, 0x80);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x58);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x80);
+			WriteI2cReg(0x7d, 0x80);
 			break;
 		case Normal:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x00);
-			wrSensorReg8_8(0x7c, 0x05);
-			wrSensorReg8_8(0x7d, 0x80);
-			wrSensorReg8_8(0x7d, 0x80);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x00);
+			WriteI2cReg(0x7c, 0x05);
+			WriteI2cReg(0x7d, 0x80);
+			WriteI2cReg(0x7d, 0x80);
 			break;
 				
 	}
 }
 
+void ArduCamOv2640::GetFrame(
+	uint8_t** image, 
+	uint32_t const& length
+)
+{
+	CS_LOW();
+	SetFifoBurst();//Set fifo burst mode
+	spi_read_blocking(SPI_PORT, BURST_FIFO_READ, *image, length);
+	CS_HIGH();
+}
 
-void ArduCAM::OV2640_set_Contrast(uint8_t const& Contrast)
+void ArduCamOv2640::SetContrast(
+	uint8_t const& Contrast
+)
 {
 	switch(Contrast)
 	{
 		case Contrast2:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x07);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x28);
-			wrSensorReg8_8(0x7d, 0x0c);
-			wrSensorReg8_8(0x7d, 0x06);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x07);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x28);
+			WriteI2cReg(0x7d, 0x0c);
+			WriteI2cReg(0x7d, 0x06);
 			break;
 		case Contrast1:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x07);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x24);
-			wrSensorReg8_8(0x7d, 0x16);
-			wrSensorReg8_8(0x7d, 0x06); 
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x07);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x24);
+			WriteI2cReg(0x7d, 0x16);
+			WriteI2cReg(0x7d, 0x06); 
 			break;
 		case Contrast0:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x07);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x06); 
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x07);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x06); 
 			break;
 		case Contrast_1:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x07);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x2a);
-			wrSensorReg8_8(0x7d, 0x06);	
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x07);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x2a);
+			WriteI2cReg(0x7d, 0x06);	
 			break;
 		case Contrast_2:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x07);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x18);
-			wrSensorReg8_8(0x7d, 0x34);
-			wrSensorReg8_8(0x7d, 0x06);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x07);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x18);
+			WriteI2cReg(0x7d, 0x34);
+			WriteI2cReg(0x7d, 0x06);
 			break;
 	}	
 }
+bool ArduCamOv2640::CheckOV2640Camera(
+	void
+)
+{
+	uint8_t cameraCommand{};
+	uint8_t vid{};
+	uint8_t pid{};
+    while (1)
+    {
+        //Check if the ArduCAM SPI bus is OK
+        WriteSpiReg(ARDUCHIP_TEST1, 0x55);
+        cameraCommand = ReadSpiReg(ARDUCHIP_TEST1);
+        if (cameraCommand != 0x55) 
+        {
+            printf(" SPI interface Error!");
+            sleep_ms(1000); continue;
+        } else 
+        {
+            printf("ACK CMD SPI interface OK.END"); break;
+        }
+    }
+  
+	while (1) 
+    {
+		//Check if the camera module type is OV2640
+		WriteI2cReg(0xff, 0x01);
+		ReadI2cReg(OV2640_CHIPID_HIGH, &vid);
+		ReadI2cReg(OV2640_CHIPID_LOW, &pid);
+		if ((vid != 0x26 ) && (( pid != 0x41 ) || ( pid != 0x42 )))
+        {
+			printf("Can't find OV2640 module!");
+			sleep_ms(1000); 
+            continue;
+		}
+		else 
+        {
+			printf("OV2640 detected.END"); 
+            break;
+		}
+    }
+	return true;
+}
 
-void ArduCAM::OV2640_set_Brightness(uint8_t const& Brightness)
+void ArduCamOv2640::SetQsFactor(
+	uint8_t const& factor
+)
+{
+	WriteI2cReg(0xff, 0x00);
+	WriteI2cReg(0x44, factor);
+	WriteI2cReg(0xff, 0xff);
+}
+
+void ArduCamOv2640::SetBrightness(
+	uint8_t const& Brightness
+)
 {
 	switch(Brightness)
 	{
 		case Brightness2:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x09);
-			wrSensorReg8_8(0x7d, 0x40);
-			wrSensorReg8_8(0x7d, 0x00);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x09);
+			WriteI2cReg(0x7d, 0x40);
+			WriteI2cReg(0x7d, 0x00);
 			break;
 		case Brightness1:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x09);
-			wrSensorReg8_8(0x7d, 0x30);
-			wrSensorReg8_8(0x7d, 0x00);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x09);
+			WriteI2cReg(0x7d, 0x30);
+			WriteI2cReg(0x7d, 0x00);
 			break;	
 		case Brightness0:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x09);
-			wrSensorReg8_8(0x7d, 0x20);
-			wrSensorReg8_8(0x7d, 0x00);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x09);
+			WriteI2cReg(0x7d, 0x20);
+			WriteI2cReg(0x7d, 0x00);
 			break;
 		case Brightness_1:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x09);
-			wrSensorReg8_8(0x7d, 0x10);
-			wrSensorReg8_8(0x7d, 0x00);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x09);
+			WriteI2cReg(0x7d, 0x10);
+			WriteI2cReg(0x7d, 0x00);
 			break;
 		case Brightness_2:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x04);
-			wrSensorReg8_8(0x7c, 0x09);
-			wrSensorReg8_8(0x7d, 0x00);
-			wrSensorReg8_8(0x7d, 0x00);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x04);
+			WriteI2cReg(0x7c, 0x09);
+			WriteI2cReg(0x7d, 0x00);
+			WriteI2cReg(0x7d, 0x00);
 			break;	
 	}			
 }
 
-void ArduCAM::OV2640_set_Color_Saturation(uint8_t const& Color_Saturation)
+void ArduCamOv2640::SetColorSaturation(
+	uint8_t const& Color_Saturation
+)
 {
 	switch(Color_Saturation)
 	{
 		case Saturation2:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x02);
-			wrSensorReg8_8(0x7c, 0x03);
-			wrSensorReg8_8(0x7d, 0x68);
-			wrSensorReg8_8(0x7d, 0x68);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x02);
+			WriteI2cReg(0x7c, 0x03);
+			WriteI2cReg(0x7d, 0x68);
+			WriteI2cReg(0x7d, 0x68);
 			break;
 		case Saturation1:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x02);
-			wrSensorReg8_8(0x7c, 0x03);
-			wrSensorReg8_8(0x7d, 0x58);
-			wrSensorReg8_8(0x7d, 0x58);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x02);
+			WriteI2cReg(0x7c, 0x03);
+			WriteI2cReg(0x7d, 0x58);
+			WriteI2cReg(0x7d, 0x58);
 			break;
 		case Saturation0:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x02);
-			wrSensorReg8_8(0x7c, 0x03);
-			wrSensorReg8_8(0x7d, 0x48);
-			wrSensorReg8_8(0x7d, 0x48);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x02);
+			WriteI2cReg(0x7c, 0x03);
+			WriteI2cReg(0x7d, 0x48);
+			WriteI2cReg(0x7d, 0x48);
 			break;
 		case Saturation_1:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x02);
-			wrSensorReg8_8(0x7c, 0x03);
-			wrSensorReg8_8(0x7d, 0x38);
-			wrSensorReg8_8(0x7d, 0x38);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x02);
+			WriteI2cReg(0x7c, 0x03);
+			WriteI2cReg(0x7d, 0x38);
+			WriteI2cReg(0x7d, 0x38);
 			break;
 		case Saturation_2:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0x7c, 0x00);
-			wrSensorReg8_8(0x7d, 0x02);
-			wrSensorReg8_8(0x7c, 0x03);
-			wrSensorReg8_8(0x7d, 0x28);
-			wrSensorReg8_8(0x7d, 0x28);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0x7c, 0x00);
+			WriteI2cReg(0x7d, 0x02);
+			WriteI2cReg(0x7c, 0x03);
+			WriteI2cReg(0x7d, 0x28);
+			WriteI2cReg(0x7d, 0x28);
 			break;	
 	}
 }
 
-void ArduCAM::OV2640_set_Light_Mode(uint8_t const& Light_Mode)
+void ArduCamOv2640::SetLightMode(
+	uint8_t const& Light_Mode
+)
 {
 	switch(Light_Mode)
 	{
 	
 		case Auto:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0xc7, 0x00); //AWB on
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0xc7, 0x00); //AWB on
 			break;
 		case Sunny:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0xc7, 0x40); //AWB off
-			wrSensorReg8_8(0xcc, 0x5e);
-			wrSensorReg8_8(0xcd, 0x41);
-			wrSensorReg8_8(0xce, 0x54);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0xc7, 0x40); //AWB off
+			WriteI2cReg(0xcc, 0x5e);
+			WriteI2cReg(0xcd, 0x41);
+			WriteI2cReg(0xce, 0x54);
 			break;
 		case Cloudy:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0xc7, 0x40); //AWB off
-			wrSensorReg8_8(0xcc, 0x65);
-			wrSensorReg8_8(0xcd, 0x41);
-			wrSensorReg8_8(0xce, 0x4f);  
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0xc7, 0x40); //AWB off
+			WriteI2cReg(0xcc, 0x65);
+			WriteI2cReg(0xcd, 0x41);
+			WriteI2cReg(0xce, 0x4f);  
 			break;
 		case Office:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0xc7, 0x40); //AWB off
-			wrSensorReg8_8(0xcc, 0x52);
-			wrSensorReg8_8(0xcd, 0x41);
-			wrSensorReg8_8(0xce, 0x66);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0xc7, 0x40); //AWB off
+			WriteI2cReg(0xcc, 0x52);
+			WriteI2cReg(0xcd, 0x41);
+			WriteI2cReg(0xce, 0x66);
 			break;
 		case Home:
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0xc7, 0x40); //AWB off
-			wrSensorReg8_8(0xcc, 0x42);
-			wrSensorReg8_8(0xcd, 0x3f);
-			wrSensorReg8_8(0xce, 0x71);
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0xc7, 0x40); //AWB off
+			WriteI2cReg(0xcc, 0x42);
+			WriteI2cReg(0xcd, 0x3f);
+			WriteI2cReg(0xce, 0x71);
 			break;
 		default :
-			wrSensorReg8_8(0xff, 0x00);
-			wrSensorReg8_8(0xc7, 0x00); //AWB on
+			WriteI2cReg(0xff, 0x00);
+			WriteI2cReg(0xc7, 0x00); //AWB on
 			break; 
 	}	
 }
 
-byte ArduCAM::rdSensorReg8_8(uint8_t const& regID, uint8_t* regDat)
+void ArduCamOv2640::ReadI2cReg(
+	uint8_t const& regID, uint8_t* regDat
+)
 {	
   i2c_write_blocking(I2C_PORT, sensor_addr, &regID, 1, true );
   i2c_read_blocking(I2C_PORT, sensor_addr, regDat,  1, false );
-  return 1;
-	
 }
 
 
-void ArduCAM::OV2640_set_JPEG_size(uint8_t const& size)
+void ArduCamOv2640::SetJpegSize(
+	uint8_t const& size
+)
 {
 	switch(size)
 	{
 		case OV2640_160x120:
-			wrSensorRegs8_8(OV2640_160x120_JPEG);
+			WriteI2cRegMulti(OV2640_160x120_JPEG);
 			break;
 		case OV2640_176x144:
-			wrSensorRegs8_8(OV2640_176x144_JPEG);
+			WriteI2cRegMulti(OV2640_176x144_JPEG);
 			break;
 		case OV2640_320x240:
-			wrSensorRegs8_8(OV2640_320x240_JPEG);
+			WriteI2cRegMulti(OV2640_320x240_JPEG);
 			break;
 		case OV2640_352x288:
-	  	wrSensorRegs8_8(OV2640_352x288_JPEG);
+	  	WriteI2cRegMulti(OV2640_352x288_JPEG);
 			break;
 		case OV2640_640x480:
-			wrSensorRegs8_8(OV2640_640x480_JPEG);
+			WriteI2cRegMulti(OV2640_640x480_JPEG);
 			break;
 		case OV2640_800x600:
-			wrSensorRegs8_8(OV2640_800x600_JPEG);
+			WriteI2cRegMulti(OV2640_800x600_JPEG);
 			break;
 		case OV2640_1024x768:
-			wrSensorRegs8_8(OV2640_1024x768_JPEG);
+			WriteI2cRegMulti(OV2640_1024x768_JPEG);
 			break;
 		case OV2640_1280x1024:
-			wrSensorRegs8_8(OV2640_1280x1024_JPEG);
+			WriteI2cRegMulti(OV2640_1280x1024_JPEG);
 			break;
 		case OV2640_1600x1200:
-			wrSensorRegs8_8(OV2640_1600x1200_JPEG);
+			WriteI2cRegMulti(OV2640_1600x1200_JPEG);
 			break;
 		default:
-			wrSensorRegs8_8(OV2640_320x240_JPEG);
+			WriteI2cRegMulti(OV2640_320x240_JPEG);
 			break;
 	}
 }
 
 
-void ArduCAM::set_format(byte const& fmt)
+void ArduCamOv2640::SetFormat(
+	byte const& fmt
+)
 {
   if (fmt == BMP)
     m_fmt = BMP;
@@ -504,8 +593,13 @@ void ArduCAM::set_format(byte const& fmt)
     m_fmt = JPEG;
 }
 
-void ArduCAM:: Arducam_init(void)
+void ArduCamOv2640:: ArduCamInit(
+	uint8_t const& CS
+)
 {
+	B_CS = CS;
+	*P_CS=CS;
+  	sbi(P_CS, B_CS);
 	i2c_init(I2C_PORT, 100 * 1000);
 	gpio_set_function(PIN_SDA, GPIO_FUNC_I2C);
 	gpio_set_function(PIN_SCL, GPIO_FUNC_I2C);
@@ -518,4 +612,11 @@ void ArduCAM:: Arducam_init(void)
 	gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
 	gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
 	gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+	gpio_init(CS);
+    gpio_set_dir(CS, GPIO_OUT);
+    gpio_put(CS, 1);
+	WriteSpiReg(0x07, 0x80);
+    sleep_ms(100);
+    WriteSpiReg(0x07, 0x00);
+    sleep_ms(100);
 }

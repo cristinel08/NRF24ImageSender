@@ -5,26 +5,52 @@
 #include "CameraOV2640.h"
 #include "tusb.h"
 #include "string"
+/*******************************************************************
+ * ReceiveFrameCamera class
+ * Used to start the camera and receive frames
+ *******************************************************************/
 
-class CameraLib
+class ReceiveFrameCamera
 {
-    public:
-        CameraLib();
-        uint8_t* ReadFifoCam(int& length);
-        void FreeFifoCam(uint8_t* imageBuf_);
-        void StartCapture();
-        void SerialUsb(uint8_t* imageBuf_, const int& length);
-    private:
-        int SerialUSBAvailable(void);
-        int SerialUsbRead(void);
-
-    private:
-        const uint8_t CS { 13 };
-        bool toggle { true };
-        ArduCAM myCAM { OV2640, CS };
-        uint8_t start_capture {0};
-        uint8_t vid{};
-        uint8_t pid{};
-        uint8_t* imageBuf{nullptr};
-        uint8_t cameraCommand{};
+public:
+    /*******************************************************************
+     * ReceiveFrameCamera constructor
+     * Initializes the pins used to communicate with the camera
+     *******************************************************************/
+    ReceiveFrameCamera(
+        void
+    );
+    /*******************************************************************
+     * ReadFifoCam
+     * Used to start the camera to load the frame on the fifo, then
+     * to get that data
+     * OUT: @param length is the jpeg data size
+     * returns: jpeg data pointer
+     *******************************************************************/
+    uint8_t* ReadFifoCam(
+        uint32_t& length
+    );
+    /*******************************************************************
+     * FreeJpegData
+     * Releases the jpeg data from memory
+     * IN: @param imageBuf is jpeg data pointer
+     *******************************************************************/
+    void FreeJpegCam(
+        uint8_t* imageBuf
+    );
+    /*******************************************************************
+     * StartCapture
+     * Checks if the camera is OV2640 and prepares it to output
+     * a jpeg image
+     * 
+     *******************************************************************/
+    void StartCapture(
+        void
+    );
+private:
+    const uint8_t CS { 13 };
+    bool toggle { true };
+    ArduCamOv2640 myCAM { };
+    bool start_capture {0};
+    uint8_t* imageBuf{nullptr};
 };

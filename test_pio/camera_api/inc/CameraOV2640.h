@@ -302,61 +302,104 @@ struct sensor_reg {
 
 
 
-/****************************************************************/
-/* define a structure for sensor register initialization values */
-/****************************************************************/
 
-class ArduCAM 
+
+/*******************************************************************
+ * ArduCamOv2640 class
+ * Takes care of the ArducamOV2640 camera
+ *******************************************************************/
+
+class ArduCamOv2640 
 {
-	public:
-	ArduCAM( void );
-	ArduCAM(byte const& model ,uint8_t const& CS);
-	void InitCAM( void );
+public:
+	ArduCamOv2640( 
+		void 
+	);
+	void InitCAM( 
+		void 
+	);
+	void FlushFifo(
+		void
+	);
+	void StartCapture(
+		void
+	);
+	void ClearFifoFlag(
+		void
+	);
+	uint32_t ReadFifoLength(
+		void
+	);
+	void SetFifoBurst(
+		void
+	);
+	uint8_t GetBit(
+		uint8_t const& reg, 
+		uint8_t const& bit
+	);
+	void SetJpegSize(
+		uint8_t const& size
+	);
+	void SetLightMode(
+		uint8_t const& Light_Mode
+	);
+	void SetColorSaturation(
+		uint8_t const& Color_Saturation
+	);
+	void SetBrightness(
+		uint8_t const& Brightness
+	);
 	
-	void CS_HIGH(void);
-	void CS_LOW(void);
+	void SetContrast(
+		uint8_t const& Contrast
+	);
 	
-	void flush_fifo(void);
-	void start_capture(void);
-	void clear_fifo_flag(void);
-
-	
-	uint8_t read_reg(uint8_t const& addr);
-	void write_reg(uint8_t const& addr, uint8_t const& data);	
-	
-	uint32_t read_fifo_length(void);
-	void set_fifo_burst(void);
-	
-	void set_bit(uint8_t const& addr, uint8_t const& bit);
-	void clear_bit(uint8_t const& addr, uint8_t const& bit);
-	uint8_t get_bit(uint8_t const& addr, uint8_t const& bit);
- 
+	void SetSpecialEffects(
+		uint8_t const& Special_effect
+	);	
+	void SetFormat(
+		byte const& fmt
+	);
+	void ArduCamInit(
+		uint8_t const& CS
+	);
+	void GetFrame(
+		uint8_t** image, 
+		uint32_t const& lenght
+	);
+	bool CheckOV2640Camera(
+		void
+	);
+	void SetQsFactor(
+		uint8_t const& factor
+	);
+private:
+	uint8_t ReadSpiReg(
+		uint8_t const& addr
+	);
+	void WriteSpiReg(
+		uint8_t const& addr, 
+		uint8_t const& data
+	);	
+ 	void CS_HIGH(
+		void
+	);
+	void CS_LOW(
+		void
+	);
 	// Write 8 bit values to 8 bit register address
-	int wrSensorRegs8_8(struct sensor_reg const*);
-	
+	void WriteI2cRegMulti(
+		struct sensor_reg const*
+	);
 	// Read/write 8 bit value to/from 8 bit register address	
-	byte wrSensorReg8_8(uint8_t const& regID, uint8_t const& regDat);
-	byte rdSensorReg8_8(uint8_t const& regID, uint8_t* regDat);
-
-	void OV2640_set_JPEG_size(uint8_t const& size);
-	
-	
-	void OV2640_set_Light_Mode(uint8_t const& Light_Mode);
-	
-	void OV2640_set_Color_Saturation(uint8_t const& Color_Saturation);
-	
-	
-	void OV2640_set_Brightness(uint8_t const& Brightness);
-	
-	void OV2640_set_Contrast(uint8_t const& Contrast);
-	
-	void OV2640_set_Special_effects(uint8_t const& Special_effect);	
-	
-	
-	
-	void set_format(byte const& fmt);
-	void Arducam_init(void);
-  protected:
+	void WriteI2cReg(
+		uint8_t const& regID, 
+		uint8_t const& regDat
+	);
+	void ReadI2cReg(
+		uint8_t const& regID, 
+		uint8_t* regDat
+	);
 	regtype *P_CS;
 	regsize B_CS;
 	byte m_fmt;

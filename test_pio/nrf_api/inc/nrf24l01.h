@@ -53,17 +53,12 @@
 #define CRC0		2
 #define PWR_UP		1
 
-#ifndef PICO
-#define CE_PIN 		15
-#define CSN_PIN 	24
-#else
 #define NRF_SPI_PORT  spi0
 #define SCK_PIN       2
 #define MOSI_PIN      3  
 #define MISO_PIN      4
 #define CE_PIN        7
 #define CSN_PIN       8
-#endif
 
 
 #endif /* INC_RF24_H_ */
